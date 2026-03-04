@@ -20,7 +20,12 @@ const { config, validateEnv } = require("./config");
 const { notFound, errorHandler, apiLimiter } = require("./middleware");
 
 // Routes
-const { testRoutes, authRoutes } = require("./routes");
+const {
+  testRoutes,
+  authRoutes,
+  propertyRoutes,
+  bookingRoutes,
+} = require("./routes");
 
 // Validate environment variables
 validateEnv();
@@ -58,6 +63,8 @@ if (config.isDevelopment) {
 // API Routes
 app.use("/api/test", testRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/properties", propertyRoutes);
+app.use("/api/bookings", bookingRoutes);
 // Add more routes here as you create them
 // app.use('/api/users', userRoutes);
 
