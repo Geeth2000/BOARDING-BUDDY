@@ -14,6 +14,11 @@ export { default as StudentDashboard } from "./student/Dashboard";
 
 // Landlord pages
 export { default as LandlordDashboard } from "./landlord/Dashboard";
+export { default as AddProperty } from "./landlord/AddProperty";
+export { default as MyProperties } from "./landlord/MyProperties";
+export { default as BookingRequests } from "./landlord/BookingRequests";
+export { default as LandlordReviews } from "./landlord/Reviews";
+export { default as LandlordMessages } from "./landlord/Messages";
 
 // Admin pages
 export { default as AdminDashboard } from "./admin/Dashboard";

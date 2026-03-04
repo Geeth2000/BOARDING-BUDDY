@@ -15,6 +15,7 @@ import {
   Shield,
   User,
   ClipboardList,
+  PlusCircle,
 } from "lucide-react";
 
 /**
@@ -30,6 +31,7 @@ const menuConfig = {
   ],
   landlord: [
     { name: "Dashboard", path: "/landlord/dashboard", icon: Home },
+    { name: "Add Property", path: "/landlord/add-property", icon: PlusCircle },
     { name: "My Properties", path: "/landlord/properties", icon: Building2 },
     {
       name: "Booking Requests",

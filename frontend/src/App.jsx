@@ -17,6 +17,11 @@ import {
   PropertyDetails,
   StudentDashboard,
   LandlordDashboard,
+  AddProperty,
+  MyProperties,
+  BookingRequests,
+  LandlordReviews,
+  LandlordMessages,
   AdminDashboard,
   AdminProperties,
   AdminBookings,
@@ -76,22 +81,11 @@ function App() {
           {/* Landlord routes */}
           <Route element={<LandlordRoute />}>
             <Route path="/landlord/dashboard" element={<LandlordDashboard />} />
-            <Route
-              path="/landlord/properties"
-              element={<PlaceholderPage title="My Properties" />}
-            />
-            <Route
-              path="/landlord/bookings"
-              element={<PlaceholderPage title="Booking Requests" />}
-            />
-            <Route
-              path="/landlord/reviews"
-              element={<PlaceholderPage title="Reviews" />}
-            />
-            <Route
-              path="/landlord/messages"
-              element={<PlaceholderPage title="Messages" />}
-            />
+            <Route path="/landlord/add-property" element={<AddProperty />} />
+            <Route path="/landlord/properties" element={<MyProperties />} />
+            <Route path="/landlord/bookings" element={<BookingRequests />} />
+            <Route path="/landlord/reviews" element={<LandlordReviews />} />
+            <Route path="/landlord/messages" element={<LandlordMessages />} />
           </Route>
 
           {/* Admin routes */}

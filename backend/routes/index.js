@@ -6,6 +6,7 @@ const reviewRoutes = require("./reviewRoutes");
 const messageRoutes = require("./messageRoutes");
 const analyticsRoutes = require("./analyticsRoutes");
 const adminRoutes = require("./adminRoutes");
+const landlordRoutes = require("./landlordRoutes");
 // Add more route imports here as you create them
 // const userRoutes = require('./userRoutes');
 
@@ -18,5 +19,6 @@ module.exports = {
   messageRoutes,
   analyticsRoutes,
   adminRoutes,
+  landlordRoutes,
   // userRoutes,
 };
