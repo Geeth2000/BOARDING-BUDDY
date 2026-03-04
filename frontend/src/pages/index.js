@@ -2,6 +2,9 @@
 export { default as Login } from "./auth/Login";
 export { default as Register } from "./auth/Register";
 
+// Public pages
+export { default as Home } from "./public/Home";
+
 // Student pages
 export { default as StudentDashboard } from "./student/Dashboard";
 
