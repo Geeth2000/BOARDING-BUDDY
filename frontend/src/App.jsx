@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import {
   ProtectedRoute,
   GuestRoute,
@@ -6,10 +6,13 @@ import {
   LandlordRoute,
   AdminRoute,
 } from "./components";
-import { DashboardLayout } from "./layouts";
+import { DashboardLayout, PublicLayout } from "./layouts";
 import {
   Login,
   Register,
+  Home,
+  About,
+  Contact,
   StudentDashboard,
   LandlordDashboard,
   AdminDashboard,
@@ -22,7 +25,14 @@ import {
 function App() {
   return (
     <Routes>
-      {/* Public routes - only for guests */}
+      {/* Public routes - accessible to everyone */}
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+      </Route>
+
+      {/* Auth routes - only for guests */}
       <Route element={<GuestRoute />}>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -107,9 +117,6 @@ function App() {
         </Route>
       </Route>
 
-      {/* Redirect root to login or dashboard */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-
       {/* 404 - Not Found */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
@@ -144,7 +151,7 @@ function NotFoundPage() {
         The page you're looking for doesn't exist.
       </p>
       <a
-        href="/login"
+        href="/"
         className="mt-6 rounded-lg bg-blue-600 px-6 py-2 font-medium text-white hover:bg-blue-700"
       >
         Go Home

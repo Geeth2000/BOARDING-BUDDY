@@ -102,58 +102,6 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-100 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
-                <Home className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">
-                Boarding Buddy
-              </span>
-            </div>
-
-            <div className="hidden items-center gap-8 md:flex">
-              <a
-                href="#features"
-                className="text-sm font-medium text-gray-600 transition-colors hover:text-blue-600"
-              >
-                Features
-              </a>
-              <a
-                href="#how-it-works"
-                className="text-sm font-medium text-gray-600 transition-colors hover:text-blue-600"
-              >
-                How It Works
-              </a>
-              <a
-                href="#testimonials"
-                className="text-sm font-medium text-gray-600 transition-colors hover:text-blue-600"
-              >
-                Reviews
-              </a>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Link
-                to="/login"
-                className="hidden text-sm font-medium text-gray-700 transition-colors hover:text-blue-600 sm:block"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/register"
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-blue-700 hover:shadow-lg"
-              >
-                Get Started
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-gray-50 pt-16">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-32">
