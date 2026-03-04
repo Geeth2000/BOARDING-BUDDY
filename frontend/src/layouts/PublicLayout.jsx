@@ -9,7 +9,7 @@ const PublicLayout = () => {
   return (
     <div className="min-h-screen">
       <PublicNavbar />
-      <main>
+      <main className="pt-16">
         <Outlet />
       </main>
     </div>

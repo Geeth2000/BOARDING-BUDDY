@@ -13,9 +13,15 @@ import {
   Home,
   About,
   Contact,
+  Properties,
+  PropertyDetails,
   StudentDashboard,
   LandlordDashboard,
   AdminDashboard,
+  AdminProperties,
+  AdminBookings,
+  AdminUsers,
+  AdminReviews,
 } from "./pages";
 
 /**
@@ -30,6 +36,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/properties" element={<Properties />} />
+        <Route path="/properties/:id" element={<PropertyDetails />} />
       </Route>
 
       {/* Auth routes - only for guests */}
@@ -87,22 +95,10 @@ function App() {
           {/* Admin routes */}
           <Route element={<AdminRoute />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route
-              path="/admin/properties"
-              element={<PlaceholderPage title="Manage Properties" />}
-            />
-            <Route
-              path="/admin/bookings"
-              element={<PlaceholderPage title="Manage Bookings" />}
-            />
-            <Route
-              path="/admin/users"
-              element={<PlaceholderPage title="Manage Users" />}
-            />
-            <Route
-              path="/admin/reviews"
-              element={<PlaceholderPage title="Manage Reviews" />}
-            />
+            <Route path="/admin/properties" element={<AdminProperties />} />
+            <Route path="/admin/bookings" element={<AdminBookings />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/reviews" element={<AdminReviews />} />
           </Route>
 
           {/* Common protected routes */}

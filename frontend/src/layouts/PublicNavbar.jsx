@@ -28,6 +28,7 @@ const PublicNavbar = () => {
 
   const navLinks = [
     { name: "Home", path: "/" },
+    { name: "Properties", path: "/properties" },
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
   ];

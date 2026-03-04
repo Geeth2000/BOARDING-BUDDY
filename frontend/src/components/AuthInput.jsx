@@ -36,7 +36,9 @@ const AuthInput = ({
           <Icon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
         )}
         <input
-          type={showPasswordToggle ? (showPassword ? "text" : "password") : type}
+          type={
+            showPasswordToggle ? (showPassword ? "text" : "password") : type
+          }
           id={id}
           name={name}
           value={value}

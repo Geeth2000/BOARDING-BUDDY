@@ -1,19 +1,23 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context";
+import { AuthInput } from "../../components";
 import {
   User,
   Mail,
-  Phone,
   Lock,
-  Eye,
-  EyeOff,
+  Home,
   Shield,
+  CheckCircle,
   Loader2,
+  ArrowRight,
+  GraduationCap,
+  Building2,
 } from "lucide-react";
 
 /**
  * Register Page
+ * Modern SaaS authentication UI
  */
 const Register = () => {
   const { register, loading } = useAuth();
@@ -24,7 +28,6 @@ const Register = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "",
     password: "",
     confirmPassword: "",
     role: "student",
@@ -64,7 +67,6 @@ const Register = () => {
       const result = await register({
         name: formData.name,
         email: formData.email,
-        phone: formData.phone,
         password: formData.password,
         role: formData.role,
       });
@@ -86,226 +88,272 @@ const Register = () => {
     }
   };
 
+  const benefits = [
+    "Access to 500+ verified student accommodations",
+    "Direct communication with landlords",
+    "Authentic reviews from fellow students",
+    "Secure and transparent booking process",
+  ];
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-600">
-            <Shield className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800">Boarding Buddy</h1>
-          <p className="mt-1 text-gray-600">Create your account</p>
+    <div className="flex min-h-screen">
+      {/* Left Side - Branding */}
+      <div className="hidden w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 lg:flex lg:flex-col lg:justify-between lg:p-12">
+        <div>
+          {/* Logo */}
+          <Link to="/" className="inline-flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+              <Home className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-2xl font-bold text-white">
+              Boarding Buddy
+            </span>
+          </Link>
         </div>
 
-        {/* Form */}
-        <div className="rounded-xl bg-white p-8 shadow-sm">
-          {error && (
-            <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-600">
-              {error}
-            </div>
-          )}
+        {/* Center Content */}
+        <div className="max-w-lg">
+          <h1 className="mb-6 text-4xl font-bold leading-tight text-white">
+            Join the Trusted Student Housing Community
+          </h1>
+          <p className="mb-8 text-lg text-blue-100">
+            Create your free account and start your journey to finding the
+            perfect student accommodation or listing your property.
+          </p>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Role selection */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                I am a
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, role: "student" })}
-                  className={`rounded-lg border-2 py-3 text-sm font-medium transition-colors ${
-                    formData.role === "student"
-                      ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-gray-200 text-gray-600 hover:border-gray-300"
-                  }`}
-                >
-                  Student
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, role: "landlord" })}
-                  className={`rounded-lg border-2 py-3 text-sm font-medium transition-colors ${
-                    formData.role === "landlord"
-                      ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-gray-200 text-gray-600 hover:border-gray-300"
-                  }`}
-                >
-                  Landlord
-                </button>
+          {/* Benefits List */}
+          <div className="space-y-4">
+            {benefits.map((benefit, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20">
+                  <CheckCircle className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-blue-50">{benefit}</span>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
 
-            {/* Name */}
+        {/* Bottom - Trust Indicators */}
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-3">
+            <Shield className="h-8 w-8 text-blue-200" />
             <div>
-              <label
-                htmlFor="name"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                Full Name
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="John Doe"
-                  required
-                  className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
+              <div className="font-semibold text-white">Verified Platform</div>
+              <div className="text-sm text-blue-200">All listings checked</div>
             </div>
-
-            {/* Email */}
+          </div>
+          <div className="h-12 w-px bg-white/20" />
+          <div className="flex items-center gap-3">
+            <Lock className="h-8 w-8 text-blue-200" />
             <div>
-              <label
-                htmlFor="email"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="you@example.com"
-                  required
-                  className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
+              <div className="font-semibold text-white">Secure & Private</div>
+              <div className="text-sm text-blue-200">Your data protected</div>
             </div>
+          </div>
+        </div>
+      </div>
 
-            {/* Phone */}
-            <div>
-              <label
-                htmlFor="phone"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                Phone Number
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="+1 (555) 123-4567"
-                  className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
+      {/* Right Side - Register Form */}
+      <div className="flex w-full items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-6 lg:w-1/2 lg:p-12">
+        <div className="w-full max-w-md">
+          {/* Mobile Logo */}
+          <div className="mb-8 text-center lg:hidden">
+            <Link to="/" className="inline-flex items-center gap-2">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600">
+                <Home className="h-6 w-6 text-white" />
               </div>
-            </div>
+              <span className="text-2xl font-bold text-gray-900">
+                Boarding Buddy
+              </span>
+            </Link>
+          </div>
 
-            {/* Password */}
-            <div>
-              <label
-                htmlFor="password"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                  autoComplete="new-password"
-                  className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-12 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Min 6 characters with uppercase, lowercase, and number
+          {/* Form Card */}
+          <div className="rounded-2xl bg-white p-8 shadow-xl shadow-gray-200/50">
+            <div className="mb-6 text-center">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Create account
+              </h2>
+              <p className="mt-2 text-gray-600">
+                Get started with your free account
               </p>
             </div>
 
-            {/* Confirm Password */}
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                Confirm Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  required
-                  autoComplete="new-password"
-                  className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-12 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 rounded-xl bg-red-50 p-4 text-sm text-red-600">
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="h-5 w-5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span>{error}</span>
+                </div>
               </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Role Selection */}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  I want to
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({ ...formData, role: "student" })
+                    }
+                    className={`flex items-center justify-center gap-2 rounded-xl border-2 py-3.5 text-sm font-medium transition-all ${
+                      formData.role === "student"
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    <GraduationCap className="h-5 w-5" />
+                    Find Housing
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({ ...formData, role: "landlord" })
+                    }
+                    className={`flex items-center justify-center gap-2 rounded-xl border-2 py-3.5 text-sm font-medium transition-all ${
+                      formData.role === "landlord"
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Building2 className="h-5 w-5" />
+                    List Property
+                  </button>
+                </div>
+              </div>
+
+              {/* Name */}
+              <AuthInput
+                id="name"
+                name="name"
+                type="text"
+                label="Full Name"
+                placeholder="John Doe"
+                value={formData.name}
+                onChange={handleChange}
+                icon={User}
+                required
+                autoComplete="name"
+              />
+
+              {/* Email */}
+              <AuthInput
+                id="email"
+                name="email"
+                type="email"
+                label="Email Address"
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                icon={Mail}
+                required
+                autoComplete="email"
+              />
+
+              {/* Password */}
+              <div>
+                <AuthInput
+                  id="password"
+                  name="password"
+                  label="Password"
+                  placeholder="Create a strong password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  icon={Lock}
+                  required
+                  showPasswordToggle
+                  showPassword={showPassword}
+                  onTogglePassword={() => setShowPassword(!showPassword)}
+                  autoComplete="new-password"
+                />
+                <p className="mt-1.5 text-xs text-gray-500">
+                  Min 6 characters with uppercase, lowercase, and number
+                </p>
+              </div>
+
+              {/* Confirm Password */}
+              <AuthInput
+                id="confirmPassword"
+                name="confirmPassword"
+                label="Confirm Password"
+                placeholder="Confirm your password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                icon={Lock}
+                required
+                showPasswordToggle
+                showPassword={showConfirmPassword}
+                onTogglePassword={() =>
+                  setShowConfirmPassword(!showConfirmPassword)
+                }
+                autoComplete="new-password"
+              />
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 py-3.5 font-semibold text-white shadow-lg shadow-blue-600/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-600/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Creating account...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Create Account</span>
+                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Divider */}
+            <div className="my-6 flex items-center gap-4">
+              <div className="h-px flex-1 bg-gray-200" />
+              <span className="text-sm text-gray-400">or</span>
+              <div className="h-px flex-1 bg-gray-200" />
             </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>Creating account...</span>
-                </>
-              ) : (
-                <span>Create Account</span>
-              )}
-            </button>
-          </form>
+            {/* Login Link */}
+            <p className="text-center text-gray-600">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="font-semibold text-blue-600 transition-colors hover:text-blue-700"
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
 
-          {/* Login link */}
-          <p className="mt-6 text-center text-sm text-gray-600">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="font-medium text-blue-600 hover:underline"
-            >
-              Sign in
-            </Link>
+          {/* Footer */}
+          <p className="mt-8 text-center text-sm text-gray-500">
+            By creating an account, you agree to our{" "}
+            <a href="#" className="text-blue-600 hover:underline">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="#" className="text-blue-600 hover:underline">
+              Privacy Policy
+            </a>
           </p>
         </div>
       </div>

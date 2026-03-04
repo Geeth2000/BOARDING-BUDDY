@@ -1,15 +1,27 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context";
-import { Mail, Lock, Eye, EyeOff, Shield, Loader2 } from "lucide-react";
+import { AuthInput } from "../../components";
+import {
+  Mail,
+  Lock,
+  Home,
+  Shield,
+  Star,
+  Users,
+  Loader2,
+  ArrowRight,
+} from "lucide-react";
 
 /**
  * Login Page
+ * Modern SaaS authentication UI
  */
 const Login = () => {
   const { login, loading } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
@@ -49,119 +61,225 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-600">
-            <Shield className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800">Boarding Buddy</h1>
-          <p className="mt-1 text-gray-600">Sign in to your account</p>
+    <div className="flex min-h-screen">
+      {/* Left Side - Branding */}
+      <div className="hidden w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 lg:flex lg:flex-col lg:justify-between lg:p-12">
+        <div>
+          {/* Logo */}
+          <Link to="/" className="inline-flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+              <Home className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-2xl font-bold text-white">
+              Boarding Buddy
+            </span>
+          </Link>
         </div>
 
-        {/* Form */}
-        <div className="rounded-xl bg-white p-8 shadow-sm">
-          {error && (
-            <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-600">
-              {error}
-            </div>
-          )}
+        {/* Center Content */}
+        <div className="max-w-lg">
+          <h1 className="mb-6 text-4xl font-bold leading-tight text-white">
+            Find Safe & Verified Student Boarding
+          </h1>
+          <p className="mb-8 text-lg text-blue-100">
+            Join thousands of students who have found their perfect home away
+            from home. Verified listings, transparent pricing, and secure
+            communication.
+          </p>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
-            <div>
-              <label
-                htmlFor="email"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="you@example.com"
-                  required
-                  className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
+          {/* Stats */}
+          <div className="flex gap-8">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20">
+                <Shield className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <div className="text-xl font-bold text-white">500+</div>
+                <div className="text-sm text-blue-200">Verified Listings</div>
               </div>
             </div>
-
-            {/* Password */}
-            <div>
-              <label
-                htmlFor="password"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  required
-                  className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-12 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20">
+                <Users className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <div className="text-xl font-bold text-white">5,000+</div>
+                <div className="text-sm text-blue-200">Happy Students</div>
               </div>
             </div>
-
-            {/* Forgot password */}
-            <div className="text-right">
-              <Link
-                to="/forgot-password"
-                className="text-sm text-blue-600 hover:underline"
-              >
-                Forgot your password?
-              </Link>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20">
+                <Star className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <div className="text-xl font-bold text-white">4.8</div>
+                <div className="text-sm text-blue-200">Average Rating</div>
+              </div>
             </div>
+          </div>
+        </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>Signing in...</span>
-                </>
-              ) : (
-                <span>Sign In</span>
-              )}
-            </button>
-          </form>
+        {/* Bottom - Testimonial */}
+        <div className="rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
+          <p className="mb-4 text-blue-50">
+            "Boarding Buddy made finding accommodation so easy! Found a verified
+            place near campus in just two days."
+          </p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 font-semibold text-white">
+              SJ
+            </div>
+            <div>
+              <div className="font-medium text-white">Sarah Johnson</div>
+              <div className="text-sm text-blue-200">Medical Student, UoC</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          {/* Register link */}
-          <p className="mt-6 text-center text-sm text-gray-600">
-            Don't have an account?{" "}
-            <Link
-              to="/register"
-              className="font-medium text-blue-600 hover:underline"
-            >
-              Create one
+      {/* Right Side - Login Form */}
+      <div className="flex w-full items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-6 lg:w-1/2 lg:p-12">
+        <div className="w-full max-w-md">
+          {/* Mobile Logo */}
+          <div className="mb-8 text-center lg:hidden">
+            <Link to="/" className="inline-flex items-center gap-2">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600">
+                <Home className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold text-gray-900">
+                Boarding Buddy
+              </span>
             </Link>
+          </div>
+
+          {/* Form Card */}
+          <div className="rounded-2xl bg-white p-8 shadow-xl shadow-gray-200/50">
+            <div className="mb-8 text-center">
+              <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
+              <p className="mt-2 text-gray-600">
+                Sign in to continue to your dashboard
+              </p>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 rounded-xl bg-red-50 p-4 text-sm text-red-600">
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="h-5 w-5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span>{error}</span>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Email */}
+              <AuthInput
+                id="email"
+                name="email"
+                type="email"
+                label="Email Address"
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                icon={Mail}
+                required
+                autoComplete="email"
+              />
+
+              {/* Password */}
+              <AuthInput
+                id="password"
+                name="password"
+                label="Password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleChange}
+                icon={Lock}
+                required
+                showPasswordToggle
+                showPassword={showPassword}
+                onTogglePassword={() => setShowPassword(!showPassword)}
+                autoComplete="current-password"
+              />
+
+              {/* Remember Me & Forgot Password */}
+              <div className="flex items-center justify-between">
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-600">Remember me</span>
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 py-3.5 font-semibold text-white shadow-lg shadow-blue-600/30 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-600/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Signing in...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign In</span>
+                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Divider */}
+            <div className="my-6 flex items-center gap-4">
+              <div className="h-px flex-1 bg-gray-200" />
+              <span className="text-sm text-gray-400">or</span>
+              <div className="h-px flex-1 bg-gray-200" />
+            </div>
+
+            {/* Register Link */}
+            <p className="text-center text-gray-600">
+              Don't have an account?{" "}
+              <Link
+                to="/register"
+                className="font-semibold text-blue-600 transition-colors hover:text-blue-700"
+              >
+                Create account
+              </Link>
+            </p>
+          </div>
+
+          {/* Footer */}
+          <p className="mt-8 text-center text-sm text-gray-500">
+            By signing in, you agree to our{" "}
+            <a href="#" className="text-blue-600 hover:underline">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="#" className="text-blue-600 hover:underline">
+              Privacy Policy
+            </a>
           </p>
         </div>
       </div>

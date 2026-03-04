@@ -41,6 +41,7 @@ const {
   reviewRoutes,
   messageRoutes,
   analyticsRoutes,
+  adminRoutes,
 } = require("./routes");
 
 // Validate environment variables
@@ -130,6 +131,7 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Health check endpoint (for load balancers)
 app.get("/health", (req, res) => {
