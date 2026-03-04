@@ -1,6 +1,7 @@
 const User = require("./User");
-// Add more model imports here as you create them
+const Property = require("./Property");
 
 module.exports = {
   User,
+  Property,
 };
