@@ -26,6 +26,7 @@ const {
   propertyRoutes,
   bookingRoutes,
   reviewRoutes,
+  messageRoutes,
 } = require("./routes");
 
 // Validate environment variables
@@ -67,6 +68,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/messages", messageRoutes);
 // Add more routes here as you create them
 // app.use('/api/users', userRoutes);
 
