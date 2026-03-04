@@ -1,6 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../context";
 import { authAPI } from "../../api";
+import {
+  uploadFile,
+  validateFile,
+  createPreviewUrl,
+  revokePreviewUrl,
+} from "../../utils/mediaUpload";
 import {
   User,
   Mail,
@@ -11,6 +17,8 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
+  Upload,
+  X,
 } from "lucide-react";
 
 /**
@@ -20,8 +28,11 @@ import {
 const Profile = () => {
   const { user, checkAuth } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -67,6 +78,59 @@ const Profile = () => {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
+
+  // Handle avatar file selection
+  const handleAvatarSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file
+    const validation = validateFile(file);
+    if (!validation.valid) {
+      setError(validation.error);
+      return;
+    }
+
+    // Create preview
+    const previewUrl = createPreviewUrl(file);
+    setAvatarPreview(previewUrl);
+
+    // Upload to Supabase
+    setUploadingAvatar(true);
+    setError("");
+
+    try {
+      const url = await uploadFile(file, "property-images", "avatars");
+      setFormData((prev) => ({ ...prev, avatar: url }));
+      setSuccess("Avatar uploaded successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err.message || "Failed to upload avatar");
+      // Clear preview on error
+      revokePreviewUrl(previewUrl);
+      setAvatarPreview(null);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  // Remove avatar
+  const handleRemoveAvatar = () => {
+    if (avatarPreview) {
+      revokePreviewUrl(avatarPreview);
+      setAvatarPreview(null);
+    }
+    setFormData((prev) => ({ ...prev, avatar: "" }));
+  };
+
+  // Cleanup preview URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (avatarPreview) {
+        revokePreviewUrl(avatarPreview);
+      }
+    };
+  }, [avatarPreview]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -116,12 +180,14 @@ const Profile = () => {
           <h2 className="mb-4 text-lg font-semibold text-gray-800">
             Profile Photo
           </h2>
-          <div className="flex items-center gap-6">
-            <div className="relative">
-              <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-3xl font-bold text-white">
-                {formData.avatar ? (
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+            <div className="relative shrink-0">
+              <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-blue-500 to-blue-600 text-4xl font-bold text-white">
+                {uploadingAvatar ? (
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                ) : avatarPreview || formData.avatar ? (
                   <img
-                    src={formData.avatar}
+                    src={avatarPreview || formData.avatar}
                     alt={formData.name}
                     className="h-full w-full object-cover"
                   />
@@ -129,27 +195,44 @@ const Profile = () => {
                   user?.name?.charAt(0)?.toUpperCase() || "U"
                 )}
               </div>
-              <button
-                type="button"
-                className="absolute -bottom-1 -right-1 rounded-full bg-blue-600 p-2 text-white shadow-lg transition-colors hover:bg-blue-700"
-              >
-                <Camera className="h-4 w-4" />
-              </button>
+              {(avatarPreview || formData.avatar) && !uploadingAvatar && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  className="absolute -right-1 -top-1 rounded-full bg-red-500 p-1.5 text-white shadow-lg transition-colors hover:bg-red-600"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
             </div>
             <div className="flex-1">
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Avatar URL
-              </label>
               <input
-                type="url"
-                name="avatar"
-                value={formData.avatar}
-                onChange={handleChange}
-                placeholder="https://example.com/avatar.jpg"
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                ref={fileInputRef}
+                type="file"
+                accept=".jpg,.jpeg,.png"
+                onChange={handleAvatarSelect}
+                className="hidden"
               />
-              <p className="mt-1 text-xs text-gray-500">
-                Enter a URL for your profile picture
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {uploadingAvatar ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" />
+                    Choose Photo
+                  </>
+                )}
+              </button>
+              <p className="mt-2 text-xs text-gray-500">
+                JPG, JPEG, or PNG. Max size 5MB.
               </p>
             </div>
           </div>

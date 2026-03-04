@@ -1,6 +1,12 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import landlordAPI from "../../api/landlord";
+import {
+  uploadMultipleFiles,
+  validateFile,
+  createPreviewUrl,
+  revokePreviewUrl,
+} from "../../utils/mediaUpload";
 import {
   Building2,
   MapPin,
@@ -15,6 +21,7 @@ import {
   AlertCircle,
   Home,
   FileText,
+  Upload,
 } from "lucide-react";
 
 /**
@@ -24,8 +31,14 @@ import {
 const AddProperty = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({
+    current: 0,
+    total: 0,
+  });
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -52,8 +65,10 @@ const AddProperty = () => {
     },
   });
 
-  const [images, setImages] = useState([]);
-  const [imageUrls, setImageUrls] = useState([""]);
+  // Image files with previews
+  const [imageFiles, setImageFiles] = useState([]);
+  // Uploaded image URLs (stored in DB)
+  const [uploadedUrls, setUploadedUrls] = useState([]);
 
   const propertyTypes = [
     { value: "room", label: "Room" },
@@ -109,26 +124,65 @@ const AddProperty = () => {
     }));
   };
 
-  const handleImageUrlChange = (index, value) => {
-    const newUrls = [...imageUrls];
-    newUrls[index] = value;
-    setImageUrls(newUrls);
-  };
+  // Handle image file selection
+  const handleImageSelect = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-  const addImageUrl = () => {
-    if (imageUrls.length < 10) {
-      setImageUrls([...imageUrls, ""]);
+    // Check max limit
+    const totalImages = imageFiles.length + files.length;
+    if (totalImages > 10) {
+      setError(
+        `You can only upload up to 10 images. Currently have ${imageFiles.length}.`,
+      );
+      return;
+    }
+
+    // Validate each file
+    const validFiles = [];
+    for (const file of files) {
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        setError(`${file.name}: ${validation.error}`);
+        return;
+      }
+      validFiles.push({
+        file,
+        preview: createPreviewUrl(file),
+        id: `${Date.now()}-${Math.random()}`,
+      });
+    }
+
+    setImageFiles((prev) => [...prev, ...validFiles]);
+    setError("");
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
-  const removeImageUrl = (index) => {
-    const newUrls = imageUrls.filter((_, i) => i !== index);
-    setImageUrls(newUrls.length ? newUrls : [""]);
+  // Remove image file
+  const removeImageFile = (id) => {
+    setImageFiles((prev) => {
+      const file = prev.find((f) => f.id === id);
+      if (file) {
+        revokePreviewUrl(file.preview);
+      }
+      return prev.filter((f) => f.id !== id);
+    });
   };
 
+  // Cleanup previews on unmount
+  useEffect(() => {
+    return () => {
+      imageFiles.forEach((f) => revokePreviewUrl(f.preview));
+    };
+  }, []);
+
+  // Upload images and submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
     setSuccess("");
 
@@ -140,22 +194,36 @@ const AddProperty = () => {
       !formData.rent
     ) {
       setError("Please fill in all required fields");
-      setLoading(false);
       return;
     }
 
     try {
-      // Prepare images array
-      const validImages = imageUrls
-        .filter((url) => url.trim() !== "")
-        .map((url) => ({ url: url.trim() }));
+      let imageUrls = [];
 
+      // Upload images to Supabase if any
+      if (imageFiles.length > 0) {
+        setUploading(true);
+        setUploadProgress({ current: 0, total: imageFiles.length });
+
+        const files = imageFiles.map((f) => f.file);
+        imageUrls = await uploadMultipleFiles(
+          files,
+          "property-images",
+          "properties",
+          (current, total) => setUploadProgress({ current, total }),
+        );
+
+        setUploading(false);
+      }
+
+      // Create property with uploaded image URLs
+      setLoading(true);
       const propertyData = {
         ...formData,
         rent: parseFloat(formData.rent),
         bedrooms: parseInt(formData.bedrooms, 10),
         bathrooms: parseInt(formData.bathrooms, 10),
-        images: validImages,
+        images: imageUrls.map((url) => ({ url })),
       };
 
       await landlordAPI.createProperty(propertyData);
@@ -166,9 +234,14 @@ const AddProperty = () => {
         navigate("/landlord/properties");
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to create property");
+      setError(
+        err.message ||
+          err.response?.data?.message ||
+          "Failed to create property",
+      );
     } finally {
       setLoading(false);
+      setUploading(false);
     }
   };
 
@@ -455,63 +528,78 @@ const AddProperty = () => {
             Property Images
           </h2>
           <p className="mb-4 text-sm text-gray-500">
-            Add image URLs for your property (up to 10 images)
+            Upload images for your property (up to 10 images, JPG/PNG, max 5MB
+            each)
           </p>
-          <div className="space-y-3">
-            {imageUrls.map((url, index) => (
-              <div key={index} className="flex gap-2">
-                <input
-                  type="url"
-                  value={url}
-                  onChange={(e) => handleImageUrlChange(index, e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                />
-                {imageUrls.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeImageUrl(index)}
-                    className="rounded-xl p-2.5 text-red-500 transition-colors hover:bg-red-50"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                )}
+
+          {/* Upload Button */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".jpg,.jpeg,.png"
+            multiple
+            onChange={handleImageSelect}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={imageFiles.length >= 10 || uploading}
+            className="inline-flex items-center gap-2 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-4 text-sm font-medium text-gray-600 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Upload className="h-5 w-5" />
+            {imageFiles.length === 0
+              ? "Click to upload images"
+              : `Add more images (${imageFiles.length}/10)`}
+          </button>
+
+          {/* Upload Progress */}
+          {uploading && (
+            <div className="mt-4 rounded-xl bg-blue-50 p-4">
+              <div className="flex items-center gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                <span className="text-sm text-blue-700">
+                  Uploading image {uploadProgress.current} of{" "}
+                  {uploadProgress.total}...
+                </span>
               </div>
-            ))}
-          </div>
-          {imageUrls.length < 10 && (
-            <button
-              type="button"
-              onClick={addImageUrl}
-              className="mt-3 flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
-            >
-              <Plus className="h-4 w-4" />
-              Add Another Image
-            </button>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-blue-200">
+                <div
+                  className="h-full bg-blue-600 transition-all"
+                  style={{
+                    width: `${(uploadProgress.current / uploadProgress.total) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
           )}
 
           {/* Image Previews */}
-          {imageUrls.some((url) => url.trim() !== "") && (
+          {imageFiles.length > 0 && (
             <div className="mt-4">
-              <p className="mb-2 text-sm font-medium text-gray-700">Preview:</p>
+              <p className="mb-2 text-sm font-medium text-gray-700">
+                Selected Images ({imageFiles.length}):
+              </p>
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
-                {imageUrls
-                  .filter((url) => url.trim() !== "")
-                  .map((url, index) => (
-                    <div
-                      key={index}
-                      className="aspect-square overflow-hidden rounded-xl bg-gray-100"
+                {imageFiles.map((img) => (
+                  <div
+                    key={img.id}
+                    className="group relative aspect-square overflow-hidden rounded-xl bg-gray-100"
+                  >
+                    <img
+                      src={img.preview}
+                      alt="Preview"
+                      className="h-full w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImageFile(img.id)}
+                      className="absolute right-1 top-1 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
                     >
-                      <img
-                        src={url}
-                        alt={`Preview ${index + 1}`}
-                        className="h-full w-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                        }}
-                      />
-                    </div>
-                  ))}
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -522,16 +610,22 @@ const AddProperty = () => {
           <button
             type="button"
             onClick={() => navigate("/landlord/properties")}
-            className="rounded-xl px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-100"
+            disabled={uploading || loading}
+            className="rounded-xl px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={uploading || loading}
             className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? (
+            {uploading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Uploading Images...
+              </>
+            ) : loading ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
                 Creating...
