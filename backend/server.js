@@ -1,6 +1,7 @@
 /**
  * Boarding Buddy - Backend Server
  * Main application entry point
+ * Production-ready configuration
  */
 
 // Load environment variables first
@@ -11,10 +12,14 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
+const compression = require("compression");
 
 // Config
 const connectDB = require("./config/db");
 const { config, validateEnv } = require("./config");
+
+// Logger
+const logger = require("./utils/logger");
 
 // Middleware
 const {
@@ -44,27 +49,63 @@ validateEnv();
 // Initialize Express app
 const app = express();
 
+// Trust proxy (required for rate limiting behind reverse proxy)
+if (config.isProduction) {
+  app.set("trust proxy", 1);
+}
+
 // Connect to MongoDB
 connectDB();
 
-// Security Middleware
-app.use(helmet()); // Set security headers
+// Compression middleware (gzip)
+app.use(compression());
+
+// Security Middleware - Enhanced Helmet configuration
 app.use(
-  cors({
-    origin: config.corsOrigin,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+  helmet({
+    contentSecurityPolicy: config.isProduction ? undefined : false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
   }),
 );
+
+// CORS Configuration - Production ready
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const allowedOrigins = Array.isArray(config.corsOrigin)
+      ? config.corsOrigin
+      : [config.corsOrigin];
+
+    if (allowedOrigins.includes(origin) || config.isDevelopment) {
+      callback(null, true);
+    } else {
+      logger.warn(`CORS blocked request from origin: ${origin}`);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  exposedHeaders: ["X-Total-Count", "X-Total-Pages"],
+  maxAge: 86400, // 24 hours
+};
+
+app.use(cors(corsOptions));
 
 // Rate limiting
 app.use("/api", apiLimiter);
 
-// Body parser
+// Body parser with size limits
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use(cookieParser());
+
+// Cookie parser with secure options
+app.use(cookieParser(config.jwtSecret));
 
 // Data sanitization & security
 app.use(sanitizeMongo); // Prevent NoSQL injection
@@ -72,8 +113,12 @@ app.use(xssClean); // Prevent XSS attacks
 app.use(preventParamPollution); // Prevent HTTP parameter pollution
 app.use(sanitizeRequestBody); // Custom input sanitization
 
-// Logging middleware (development only)
-if (config.isDevelopment) {
+// HTTP request logging
+if (config.isProduction) {
+  // Production: log to file via Winston
+  app.use(morgan("combined", { stream: logger.stream }));
+} else {
+  // Development: colored console output
   app.use(morgan("dev"));
 }
 
@@ -85,8 +130,16 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/analytics", analyticsRoutes);
-// Add more routes here as you create them
-// app.use('/api/users', userRoutes);
+
+// Health check endpoint (for load balancers)
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+});
 
 // Root endpoint
 app.get("/", (req, res) => {
@@ -94,6 +147,7 @@ app.get("/", (req, res) => {
     success: true,
     message: "Welcome to Boarding Buddy API",
     version: "1.0.0",
+    environment: config.nodeEnv,
     docs: "/api/test/health",
   });
 });
@@ -106,37 +160,49 @@ app.use(errorHandler);
 const PORT = config.port;
 
 const server = app.listen(PORT, () => {
-  console.log(`
+  logger.info(`Server started on port ${PORT} in ${config.nodeEnv} mode`);
+
+  if (!config.isProduction) {
+    console.log(`
   ╔════════════════════════════════════════════════════════╗
   ║                                                        ║
   ║   🚀 Boarding Buddy Server is running!                 ║
   ║                                                        ║
   ║   Environment: ${config.nodeEnv.padEnd(39)}║
   ║   Port: ${String(PORT).padEnd(46)}║
-  ║   API: http://localhost:${PORT}/api/test${" ".repeat(21)}║
+  ║   API: http://localhost:${PORT}/api${" ".repeat(26)}║
+  ║   Health: http://localhost:${PORT}/health${" ".repeat(19)}║
   ║                                                        ║
   ╚════════════════════════════════════════════════════════╝
-  `);
+    `);
+  }
 });
 
 // Handle unhandled promise rejections
 process.on("unhandledRejection", (err) => {
-  console.error(`Unhandled Rejection: ${err.message}`);
-  // Close server & exit process
+  logger.error("Unhandled Rejection", { error: err.message, stack: err.stack });
   server.close(() => process.exit(1));
 });
 
 // Handle uncaught exceptions
 process.on("uncaughtException", (err) => {
-  console.error(`Uncaught Exception: ${err.message}`);
+  logger.error("Uncaught Exception", { error: err.message, stack: err.stack });
   process.exit(1);
 });
 
 // Graceful shutdown
 process.on("SIGTERM", () => {
-  console.log("SIGTERM received. Shutting down gracefully...");
+  logger.info("SIGTERM received. Shutting down gracefully...");
   server.close(() => {
-    console.log("Process terminated.");
+    logger.info("Process terminated.");
+    process.exit(0);
+  });
+});
+
+process.on("SIGINT", () => {
+  logger.info("SIGINT received. Shutting down gracefully...");
+  server.close(() => {
+    logger.info("Process terminated.");
     process.exit(0);
   });
 });

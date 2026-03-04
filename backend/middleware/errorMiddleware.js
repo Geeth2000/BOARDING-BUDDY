@@ -1,3 +1,6 @@
+const logger = require("../utils/logger");
+const { config } = require("../config");
+
 /**
  * Custom Error Class
  * Extends Error to include status code and operational flag
@@ -31,9 +34,20 @@ const errorHandler = (err, req, res, next) => {
   let error = { ...err };
   error.message = err.message;
 
-  // Log error for debugging (in development)
-  if (process.env.NODE_ENV === "development") {
-    console.error("Error:", err);
+  // Log error details
+  const errorDetails = {
+    message: err.message,
+    url: req.originalUrl,
+    method: req.method,
+    ip: req.ip,
+    userId: req.user?.id,
+  };
+
+  // Log based on error type
+  if (err.isOperational) {
+    logger.warn("Operational error", errorDetails);
+  } else {
+    logger.error("Unexpected error", { ...errorDetails, stack: err.stack });
   }
 
   // Mongoose bad ObjectId
@@ -71,15 +85,25 @@ const errorHandler = (err, req, res, next) => {
   const statusCode = error.statusCode || 500;
   const status = error.status || "error";
 
-  res.status(statusCode).json({
+  // Build response
+  const response = {
     success: false,
     status,
     message: error.message || "Internal Server Error",
-    ...(process.env.NODE_ENV === "development" && {
-      stack: err.stack,
-      error: err,
-    }),
-  });
+  };
+
+  // Include stack trace and error details only in development
+  if (config.isDevelopment) {
+    response.stack = err.stack;
+    response.error = err;
+  }
+
+  // In production, don't leak internal error details for 500 errors
+  if (config.isProduction && statusCode === 500) {
+    response.message = "An unexpected error occurred. Please try again later.";
+  }
+
+  res.status(statusCode).json(response);
 };
 
 module.exports = {

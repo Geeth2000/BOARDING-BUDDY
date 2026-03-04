@@ -1,17 +1,11 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/User");
-const { generateToken } = require("../utils/tokenUtils");
+const {
+  generateToken,
+  setTokenCookie,
+  clearTokenCookie,
+} = require("../utils/tokenUtils");
 const { AppError } = require("../middleware/errorMiddleware");
-
-/**
- * Cookie options for JWT token
- */
-const getCookieOptions = () => ({
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "strict",
-  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-});
 
 /**
  * Send token response with HTTP-only cookie
@@ -22,20 +16,20 @@ const getCookieOptions = () => ({
 const sendTokenResponse = (user, statusCode, res) => {
   const token = generateToken(user._id);
 
-  res
-    .status(statusCode)
-    .cookie("token", token, getCookieOptions())
-    .json({
-      success: true,
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isVerified: user.isVerified,
-      },
-    });
+  // Set secure HTTP-only cookie
+  setTokenCookie(res, token);
+
+  res.status(statusCode).json({
+    success: true,
+    token,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isVerified: user.isVerified,
+    },
+  });
 };
 
 /**
@@ -110,10 +104,8 @@ const login = asyncHandler(async (req, res, next) => {
  * @access  Private
  */
 const logout = asyncHandler(async (req, res, next) => {
-  res.cookie("token", "none", {
-    httpOnly: true,
-    expires: new Date(Date.now() + 10 * 1000), // Expire in 10 seconds
-  });
+  // Clear the token cookie securely
+  clearTokenCookie(res);
 
   res.status(200).json({
     success: true,
