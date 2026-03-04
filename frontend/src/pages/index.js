@@ -4,6 +4,7 @@ export { default as Register } from "./auth/Register";
 
 // Public pages
 export { default as Home } from "./public/Home";
+export { default as About } from "./public/About";
 
 // Student pages
 export { default as StudentDashboard } from "./student/Dashboard";
