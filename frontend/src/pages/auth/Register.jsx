@@ -51,6 +51,15 @@ const Register = () => {
       return;
     }
 
+    // Validate password complexity (must match backend requirements)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+    if (!passwordRegex.test(formData.password)) {
+      setError(
+        "Password must contain at least one lowercase, one uppercase, and one number",
+      );
+      return;
+    }
+
     try {
       const result = await register({
         name: formData.name,
@@ -73,7 +82,7 @@ const Register = () => {
         setError(result.error || "Registration failed");
       }
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError(err.message || "An unexpected error occurred");
     }
   };
 
@@ -216,6 +225,7 @@ const Register = () => {
                   placeholder="••••••••"
                   required
                   minLength={6}
+                  autoComplete="new-password"
                   className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-12 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 <button
@@ -230,6 +240,9 @@ const Register = () => {
                   )}
                 </button>
               </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Min 6 characters with uppercase, lowercase, and number
+              </p>
             </div>
 
             {/* Confirm Password */}
@@ -250,6 +263,7 @@ const Register = () => {
                   onChange={handleChange}
                   placeholder="••••••••"
                   required
+                  autoComplete="new-password"
                   className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-12 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 <button

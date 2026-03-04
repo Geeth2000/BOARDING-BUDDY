@@ -90,7 +90,11 @@ export const AuthProvider = ({ children }) => {
 
       return data;
     } catch (err) {
-      const message = err.response?.data?.message || "Registration failed";
+      // Extract detailed validation errors if available
+      let message = err.response?.data?.message || "Registration failed";
+      if (err.response?.data?.errors?.length) {
+        message = err.response.data.errors.map((e) => e.message).join(". ");
+      }
       setError(message);
       throw new Error(message);
     }

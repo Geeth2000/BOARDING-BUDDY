@@ -44,7 +44,7 @@ const Login = () => {
         setError(result.error || "Login failed");
       }
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError(err.message || "An unexpected error occurred");
     }
   };
 
