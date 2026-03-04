@@ -17,7 +17,15 @@ const connectDB = require("./config/db");
 const { config, validateEnv } = require("./config");
 
 // Middleware
-const { notFound, errorHandler, apiLimiter } = require("./middleware");
+const {
+  notFound,
+  errorHandler,
+  apiLimiter,
+  sanitizeMongo,
+  xssClean,
+  preventParamPollution,
+  sanitizeRequestBody,
+} = require("./middleware");
 
 // Routes
 const {
@@ -57,6 +65,12 @@ app.use("/api", apiLimiter);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
+
+// Data sanitization & security
+app.use(sanitizeMongo); // Prevent NoSQL injection
+app.use(xssClean); // Prevent XSS attacks
+app.use(preventParamPollution); // Prevent HTTP parameter pollution
+app.use(sanitizeRequestBody); // Custom input sanitization
 
 // Logging middleware (development only)
 if (config.isDevelopment) {

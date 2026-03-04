@@ -11,25 +11,63 @@ const {
   getAllPropertiesAdmin,
   deleteProperty,
 } = require("../controllers/propertyController");
-const { protect, landlordOnly, adminOnly } = require("../middleware");
+const {
+  protect,
+  landlordOnly,
+  adminOnly,
+  propertyValidation,
+  propertyUpdateValidation,
+  mongoIdValidation,
+  paginationValidation,
+} = require("../middleware");
 
 // Public routes
-router.get("/", getApprovedProperties);
+router.get("/", paginationValidation, getApprovedProperties);
 
 // Protected routes - must be before /:id to avoid route conflicts
-router.get("/my-properties", protect, landlordOnly, getLandlordProperties);
-router.get("/admin/all", protect, adminOnly, getAllPropertiesAdmin);
+router.get(
+  "/my-properties",
+  protect,
+  landlordOnly,
+  paginationValidation,
+  getLandlordProperties,
+);
+router.get(
+  "/admin/all",
+  protect,
+  adminOnly,
+  paginationValidation,
+  getAllPropertiesAdmin,
+);
 
 // Landlord routes
-router.post("/", protect, landlordOnly, createProperty);
+router.post("/", protect, landlordOnly, propertyValidation, createProperty);
 
 // Property by ID routes (public get with conditional access in controller)
-router.get("/:id", getPropertyById);
-router.put("/:id", protect, updateProperty);
-router.delete("/:id", protect, deleteProperty);
+router.get("/:id", mongoIdValidation(), getPropertyById);
+router.put(
+  "/:id",
+  protect,
+  mongoIdValidation(),
+  propertyUpdateValidation,
+  updateProperty,
+);
+router.delete("/:id", protect, mongoIdValidation(), deleteProperty);
 
 // Admin only routes
-router.patch("/:id/approve", protect, adminOnly, approveProperty);
-router.patch("/:id/reject", protect, adminOnly, rejectProperty);
+router.patch(
+  "/:id/approve",
+  protect,
+  adminOnly,
+  mongoIdValidation(),
+  approveProperty,
+);
+router.patch(
+  "/:id/reject",
+  protect,
+  adminOnly,
+  mongoIdValidation(),
+  rejectProperty,
+);
 
 module.exports = router;

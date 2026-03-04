@@ -8,10 +8,14 @@ const {
 } = require("../controllers/authController");
 const { protect } = require("../middleware/authMiddleware");
 const { authLimiter } = require("../middleware/rateLimiter");
+const {
+  registerValidation,
+  loginValidation,
+} = require("../middleware/validationMiddleware");
 
-// Public routes (with rate limiting)
-router.post("/register", authLimiter, register);
-router.post("/login", authLimiter, login);
+// Public routes (with rate limiting and validation)
+router.post("/register", authLimiter, registerValidation, register);
+router.post("/login", authLimiter, loginValidation, login);
 
 // Protected routes
 router.post("/logout", protect, logout);
