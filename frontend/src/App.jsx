@@ -22,6 +22,8 @@ import {
   AdminBookings,
   AdminUsers,
   AdminReviews,
+  Profile,
+  Settings,
 } from "./pages";
 
 /**
@@ -102,14 +104,8 @@ function App() {
           </Route>
 
           {/* Common protected routes */}
-          <Route
-            path="/profile"
-            element={<PlaceholderPage title="Profile" />}
-          />
-          <Route
-            path="/settings"
-            element={<PlaceholderPage title="Settings" />}
-          />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
       </Route>
 

@@ -39,6 +39,36 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Profile fields
+    phone: {
+      type: String,
+      trim: true,
+      maxlength: [20, "Phone number cannot be more than 20 characters"],
+    },
+    avatar: {
+      type: String,
+      default: null,
+    },
+    bio: {
+      type: String,
+      maxlength: [500, "Bio cannot be more than 500 characters"],
+    },
+    address: {
+      street: String,
+      city: String,
+      state: String,
+      zipCode: String,
+      country: { type: String, default: "USA" },
+    },
+    // Settings/preferences
+    settings: {
+      emailNotifications: { type: Boolean, default: true },
+      smsNotifications: { type: Boolean, default: false },
+      marketingEmails: { type: Boolean, default: false },
+      darkMode: { type: Boolean, default: false },
+      language: { type: String, default: "en" },
+      timezone: { type: String, default: "America/New_York" },
+    },
   },
   {
     timestamps: true, // Adds createdAt and updatedAt
