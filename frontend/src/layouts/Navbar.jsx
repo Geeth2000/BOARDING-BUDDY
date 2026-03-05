@@ -10,6 +10,7 @@ import {
   User,
   Settings,
   LogOut,
+  Home,
 } from "lucide-react";
 
 /**
@@ -67,6 +68,19 @@ const Navbar = ({ onMenuClick }) => {
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 shadow-sm">
       {/* Left side */}
       <div className="flex items-center gap-4">
+        {/* Home / Boarding Buddy logo */}
+        <Link
+          to="/"
+          className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-blue-50"
+        >
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-500 shadow-sm">
+            <Home className="h-4 w-4 text-white" />
+          </div>
+          <span className="hidden text-lg font-bold text-gray-800 sm:block">
+            Boarding <span className="text-blue-600">Buddy</span>
+          </span>
+        </Link>
+
         {/* Mobile menu button */}
         <button
           onClick={onMenuClick}
