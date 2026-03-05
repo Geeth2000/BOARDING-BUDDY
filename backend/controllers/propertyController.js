@@ -84,6 +84,11 @@ const getApprovedProperties = asyncHandler(async (req, res, next) => {
     isActive: true,
   };
 
+  console.log(
+    "[Properties API] Fetching approved properties with filter:",
+    filter,
+  );
+
   // Optional filters
   if (req.query.city) {
     filter["location.city"] = new RegExp(req.query.city, "i");
@@ -110,6 +115,10 @@ const getApprovedProperties = asyncHandler(async (req, res, next) => {
 
   // Get total count for pagination
   const total = await Property.countDocuments(filter);
+
+  console.log(
+    `[Properties API] Found ${properties.length} approved properties out of ${total} total`,
+  );
 
   res.status(200).json({
     success: true,

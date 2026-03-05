@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { getPropertyById } from "../../data/properties";
+import { propertyAPI } from "../../api";
 import { PropertyDetailsNavbar } from "../../components";
 import { formatLKR } from "../../utils/currency";
 import {
   MapPin,
   Bed,
   Bath,
-  Square,
   ChevronLeft,
   ChevronRight,
   Phone,
@@ -17,6 +16,7 @@ import {
   Check,
   Home,
   X,
+  Building2,
 } from "lucide-react";
 
 /**
@@ -36,10 +36,16 @@ const PropertyDetails = () => {
   useEffect(() => {
     const fetchProperty = async () => {
       try {
-        const data = await getPropertyById(id);
-        setProperty(data);
+        const { data } = await propertyAPI.getById(id);
+        console.log("[PropertyDetails] Fetched property:", data);
+        if (data.success && data.data) {
+          setProperty(data.data);
+        } else {
+          setError("Property not found");
+        }
       } catch (err) {
-        setError(err.message);
+        console.error("[PropertyDetails] Error:", err);
+        setError(err.response?.data?.message || "Failed to load property");
       } finally {
         setLoading(false);
       }
@@ -47,20 +53,45 @@ const PropertyDetails = () => {
     fetchProperty();
   }, [id]);
 
+  // Helper function to get image URL
+  const getImageUrl = (image) => {
+    if (!image) return null;
+    return typeof image === "string" ? image : image?.url;
+  };
+
+  // Get all image URLs
+  const imageUrls = property?.images?.map(getImageUrl).filter(Boolean) || [];
+
   const nextImage = () => {
-    setCurrentImageIndex((prev) =>
-      prev === property.images.length - 1 ? 0 : prev + 1,
-    );
+    if (imageUrls.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === imageUrls.length - 1 ? 0 : prev + 1,
+      );
+    }
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) =>
-      prev === 0 ? property.images.length - 1 : prev - 1,
-    );
+    if (imageUrls.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === 0 ? imageUrls.length - 1 : prev - 1,
+      );
+    }
   };
 
   const goToImage = (index) => {
     setCurrentImageIndex(index);
+  };
+
+  // Get location string
+  const getLocationString = () => {
+    if (!property?.location) return "Location not specified";
+    if (typeof property.location === "string") return property.location;
+    const parts = [
+      property.location.address,
+      property.location.city,
+      property.location.district,
+    ].filter(Boolean);
+    return parts.join(", ") || "Location not specified";
   };
 
   if (loading) {
@@ -126,14 +157,20 @@ const PropertyDetails = () => {
       <div className="relative bg-gray-900">
         <div className="mx-auto max-w-7xl">
           <div className="relative aspect-[16/9] overflow-hidden md:aspect-[21/9]">
-            <img
-              src={property.images[currentImageIndex]}
-              alt={`${property.title} - Image ${currentImageIndex + 1}`}
-              className="h-full w-full object-cover"
-            />
+            {imageUrls.length > 0 ? (
+              <img
+                src={imageUrls[currentImageIndex]}
+                alt={`${property.title} - Image ${currentImageIndex + 1}`}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gray-800">
+                <Building2 className="h-24 w-24 text-gray-600" />
+              </div>
+            )}
 
             {/* Carousel Navigation */}
-            {property.images.length > 1 && (
+            {imageUrls.length > 1 && (
               <>
                 <button
                   onClick={prevImage}
@@ -150,7 +187,7 @@ const PropertyDetails = () => {
 
                 {/* Image Indicators */}
                 <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
-                  {property.images.map((_, index) => (
+                  {imageUrls.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => goToImage(index)}
@@ -165,7 +202,7 @@ const PropertyDetails = () => {
 
                 {/* Image Counter */}
                 <div className="absolute right-4 bottom-4 rounded-full bg-black/50 px-3 py-1 text-sm text-white backdrop-blur-sm">
-                  {currentImageIndex + 1} / {property.images.length}
+                  {currentImageIndex + 1} / {imageUrls.length}
                 </div>
               </>
             )}
@@ -173,10 +210,10 @@ const PropertyDetails = () => {
         </div>
 
         {/* Thumbnail Strip */}
-        {property.images.length > 1 && (
+        {imageUrls.length > 1 && (
           <div className="bg-gray-900 py-4">
             <div className="mx-auto flex max-w-7xl justify-center gap-3 px-4">
-              {property.images.map((image, index) => (
+              {imageUrls.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => goToImage(index)}
@@ -209,7 +246,7 @@ const PropertyDetails = () => {
                 <div>
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
-                      {property.type}
+                      {property.propertyType}
                     </span>
                     {property.featured && (
                       <span className="rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-sm font-medium text-white">
@@ -222,19 +259,19 @@ const PropertyDetails = () => {
                   </h1>
                   <div className="mt-2 flex items-center gap-2 text-gray-600">
                     <MapPin className="h-5 w-5 text-blue-600" />
-                    <span>{property.location}</span>
+                    <span>{getLocationString()}</span>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-3xl font-bold text-blue-600">
-                    {formatLKR(property.price)}
+                    {formatLKR(property.rent)}
                   </div>
                   <div className="text-gray-500">per month</div>
                 </div>
               </div>
 
               {/* Property Stats */}
-              <div className="mt-6 grid grid-cols-3 gap-4 rounded-xl bg-gray-50 p-4">
+              <div className="mt-6 grid grid-cols-2 gap-4 rounded-xl bg-gray-50 p-4">
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-2">
                     <Bed className="h-5 w-5 text-blue-600" />
@@ -260,15 +297,6 @@ const PropertyDetails = () => {
                   <div className="text-sm text-gray-500">
                     {property.bathrooms === 1 ? "Bathroom" : "Bathrooms"}
                   </div>
-                </div>
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <Square className="h-5 w-5 text-blue-600" />
-                    <span className="text-xl font-bold text-gray-900">
-                      {property.area.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-500">Sq Ft</div>
                 </div>
               </div>
             </div>
@@ -304,7 +332,7 @@ const PropertyDetails = () => {
                 <div className="text-center">
                   <MapPin className="mx-auto h-12 w-12 text-blue-400" />
                   <p className="mt-2 font-medium text-gray-600">
-                    {property.location}
+                    {getLocationString()}
                   </p>
                   <p className="mt-1 text-sm text-gray-400">
                     Interactive map coming soon
@@ -408,7 +436,7 @@ const ContactModal = ({ property, onClose }) => {
     name: "",
     email: "",
     phone: "",
-    message: `Hi, I'm interested in "${property.title}" listed at ${formatLKR(property.price)}/month. I would like to schedule a viewing.`,
+    message: `Hi, I'm interested in "${property.title}" listed at ${formatLKR(property.rent)}/month. I would like to schedule a viewing.`,
   });
   const [submitted, setSubmitted] = useState(false);
 

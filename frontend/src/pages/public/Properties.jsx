@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getAllProperties } from "../../data/properties";
+import { propertyAPI } from "../../api";
 import { formatLKR } from "../../utils/currency";
 import {
   MapPin,
@@ -13,16 +13,18 @@ import {
   Home,
   ChevronDown,
   X,
+  Building2,
 } from "lucide-react";
 
 /**
  * Properties Page
- * Display a grid of properties with search and filter
+ * Display a grid of approved properties with search and filter
  */
 const Properties = () => {
   const [properties, setProperties] = useState([]);
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -32,47 +34,67 @@ const Properties = () => {
     bedrooms: "any",
   });
 
-  useEffect(() => {
-    const fetchProperties = async () => {
-      try {
-        const data = await getAllProperties();
-        setProperties(data);
-        setFilteredProperties(data);
-      } catch (error) {
-        console.error("Error fetching properties:", error);
-      } finally {
-        setLoading(false);
+  // Fetch properties from API
+  const fetchProperties = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const { data } = await propertyAPI.getAll();
+      console.log("[Frontend] Fetched properties:", data);
+
+      if (data.success) {
+        setProperties(data.data || []);
+        setFilteredProperties(data.data || []);
+      } else {
+        setProperties([]);
+        setFilteredProperties([]);
       }
-    };
+    } catch (err) {
+      console.error("[Frontend] Error fetching properties:", err);
+      setError(err.response?.data?.message || "Failed to load properties");
+      setProperties([]);
+      setFilteredProperties([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchProperties();
   }, []);
 
+  // Apply frontend filters
   useEffect(() => {
-    let result = properties;
+    let result = [...properties];
 
-    // Search filter
+    // Search filter (search in title and location)
     if (searchTerm) {
+      const term = searchTerm.toLowerCase();
       result = result.filter(
         (property) =>
-          property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          property.location.toLowerCase().includes(searchTerm.toLowerCase()),
+          property.title?.toLowerCase().includes(term) ||
+          property.location?.city?.toLowerCase().includes(term) ||
+          property.location?.address?.toLowerCase().includes(term),
       );
     }
 
     // Type filter
     if (filters.type !== "all") {
-      result = result.filter((property) => property.type === filters.type);
+      result = result.filter(
+        (property) =>
+          property.propertyType?.toLowerCase() === filters.type.toLowerCase(),
+      );
     }
 
-    // Price filters
+    // Price filters (using rent field from API)
     if (filters.minPrice) {
       result = result.filter(
-        (property) => property.price >= parseInt(filters.minPrice),
+        (property) => property.rent >= parseInt(filters.minPrice),
       );
     }
     if (filters.maxPrice) {
       result = result.filter(
-        (property) => property.price <= parseInt(filters.maxPrice),
+        (property) => property.rent <= parseInt(filters.maxPrice),
       );
     }
 
@@ -91,13 +113,11 @@ const Properties = () => {
 
   const propertyTypes = [
     "all",
-    "Apartment",
-    "House",
-    "Condo",
-    "Studio",
-    "Townhouse",
-    "Loft",
-    "Penthouse",
+    "room",
+    "apartment",
+    "house",
+    "studio",
+    "shared",
   ];
 
   const clearFilters = () => {
@@ -123,6 +143,26 @@ const Properties = () => {
         <div className="text-center">
           <Loader2 className="mx-auto h-12 w-12 animate-spin text-blue-600" />
           <p className="mt-4 text-gray-600">Loading properties...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <Home className="mx-auto h-16 w-16 text-red-300" />
+          <h3 className="mt-4 text-xl font-semibold text-gray-900">
+            Failed to load properties
+          </h3>
+          <p className="mt-2 text-gray-600">{error}</p>
+          <button
+            onClick={fetchProperties}
+            className="mt-4 rounded-lg bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -183,7 +223,9 @@ const Properties = () => {
                     >
                       {propertyTypes.map((type) => (
                         <option key={type} value={type}>
-                          {type === "all" ? "All Types" : type}
+                          {type === "all"
+                            ? "All Types"
+                            : type.charAt(0).toUpperCase() + type.slice(1)}
                         </option>
                       ))}
                     </select>
@@ -295,7 +337,7 @@ const Properties = () => {
         ) : (
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {filteredProperties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
+              <PropertyCard key={property._id} property={property} />
             ))}
           </div>
         )}
@@ -306,24 +348,49 @@ const Properties = () => {
 
 /**
  * Property Card Component
+ * Displays a single property card with details from API
  */
 const PropertyCard = ({ property }) => {
+  // Get image URL (handle both object format and string format)
+  const getImageUrl = () => {
+    if (!property.images || property.images.length === 0) {
+      return null;
+    }
+    const firstImage = property.images[0];
+    return typeof firstImage === "string" ? firstImage : firstImage?.url;
+  };
+
+  const imageUrl = getImageUrl();
+
+  // Get location string
+  const getLocationString = () => {
+    if (typeof property.location === "string") {
+      return property.location;
+    }
+    return (
+      property.location?.city ||
+      property.location?.address ||
+      "Location not specified"
+    );
+  };
+
   return (
     <div className="group overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
       {/* Image */}
-      <div className="relative h-56 overflow-hidden">
-        <img
-          src={property.images[0]}
-          alt={property.title}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-        />
-        {property.featured && (
-          <div className="absolute left-4 top-4 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-semibold text-white shadow-lg">
-            Featured
+      <div className="relative h-56 overflow-hidden bg-gray-100">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={property.title}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <Building2 className="h-16 w-16 text-gray-300" />
           </div>
         )}
-        <div className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-sm font-semibold text-gray-900 shadow-lg backdrop-blur-sm">
-          {property.type}
+        <div className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-sm font-semibold capitalize text-gray-900 shadow-lg backdrop-blur-sm">
+          {property.propertyType || "Property"}
         </div>
       </div>
 
@@ -332,7 +399,7 @@ const PropertyCard = ({ property }) => {
         {/* Price */}
         <div className="mb-2 flex items-baseline gap-1">
           <span className="text-2xl font-bold text-blue-600">
-            {formatLKR(property.price)}
+            {formatLKR(property.rent || 0)}
           </span>
           <span className="text-gray-500">/month</span>
         </div>
@@ -345,7 +412,7 @@ const PropertyCard = ({ property }) => {
         {/* Location */}
         <div className="mt-2 flex items-center gap-1.5 text-gray-600">
           <MapPin className="h-4 w-4 text-gray-400" />
-          <span className="text-sm line-clamp-1">{property.location}</span>
+          <span className="text-sm line-clamp-1">{getLocationString()}</span>
         </div>
 
         {/* Stats */}
@@ -353,26 +420,23 @@ const PropertyCard = ({ property }) => {
           <div className="flex items-center gap-1.5">
             <Bed className="h-4 w-4 text-gray-400" />
             <span className="text-sm text-gray-600">
-              {property.bedrooms === 0 ? "Studio" : `${property.bedrooms} Beds`}
+              {property.bedrooms === 0
+                ? "Studio"
+                : `${property.bedrooms || 0} Bed${property.bedrooms !== 1 ? "s" : ""}`}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <Bath className="h-4 w-4 text-gray-400" />
             <span className="text-sm text-gray-600">
-              {property.bathrooms} Bath{property.bathrooms !== 1 ? "s" : ""}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Square className="h-4 w-4 text-gray-400" />
-            <span className="text-sm text-gray-600">
-              {property.area.toLocaleString()} sqft
+              {property.bathrooms || 0} Bath
+              {property.bathrooms !== 1 ? "s" : ""}
             </span>
           </div>
         </div>
 
         {/* Button */}
         <Link
-          to={`/properties/${property.id}`}
+          to={`/properties/${property._id}`}
           className="mt-4 flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 py-3 font-semibold text-white shadow-md shadow-blue-600/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-600/30"
         >
           View Details
