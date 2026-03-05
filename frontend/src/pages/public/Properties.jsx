@@ -29,10 +29,16 @@ const Properties = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     type: "all",
+    location: "all",
     minPrice: "",
     maxPrice: "",
     bedrooms: "any",
   });
+
+  // Get unique locations from properties
+  const uniqueLocations = [
+    ...new Set(properties.map((p) => p.location?.city).filter(Boolean)),
+  ].sort();
 
   // Fetch properties from API
   const fetchProperties = async () => {
@@ -74,7 +80,17 @@ const Properties = () => {
         (property) =>
           property.title?.toLowerCase().includes(term) ||
           property.location?.city?.toLowerCase().includes(term) ||
-          property.location?.address?.toLowerCase().includes(term),
+          property.location?.address?.toLowerCase().includes(term) ||
+          property.location?.district?.toLowerCase().includes(term),
+      );
+    }
+
+    // Location filter (dropdown)
+    if (filters.location !== "all") {
+      result = result.filter(
+        (property) =>
+          property.location?.city?.toLowerCase() ===
+          filters.location.toLowerCase(),
       );
     }
 
@@ -123,6 +139,7 @@ const Properties = () => {
   const clearFilters = () => {
     setFilters({
       type: "all",
+      location: "all",
       minPrice: "",
       maxPrice: "",
       bedrooms: "any",
@@ -132,6 +149,7 @@ const Properties = () => {
 
   const hasActiveFilters =
     filters.type !== "all" ||
+    filters.location !== "all" ||
     filters.minPrice ||
     filters.maxPrice ||
     filters.bedrooms !== "any" ||
@@ -208,7 +226,28 @@ const Properties = () => {
             {/* Filters Panel */}
             {showFilters && (
               <div className="mt-4 rounded-xl bg-white p-6 text-gray-900 shadow-lg">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                  {/* Location Filter */}
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                      Location
+                    </label>
+                    <select
+                      value={filters.location}
+                      onChange={(e) =>
+                        setFilters({ ...filters, location: e.target.value })
+                      }
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="all">All Locations</option>
+                      {uniqueLocations.map((location) => (
+                        <option key={location} value={location}>
+                          {location}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   {/* Type Filter */}
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">

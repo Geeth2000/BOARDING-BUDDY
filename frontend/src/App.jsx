@@ -18,6 +18,7 @@ import {
   StudentDashboard,
   LandlordDashboard,
   AddProperty,
+  EditProperty,
   MyProperties,
   BookingRequests,
   LandlordReviews,
@@ -82,6 +83,10 @@ function App() {
           <Route element={<LandlordRoute />}>
             <Route path="/landlord/dashboard" element={<LandlordDashboard />} />
             <Route path="/landlord/add-property" element={<AddProperty />} />
+            <Route
+              path="/landlord/edit-property/:id"
+              element={<EditProperty />}
+            />
             <Route path="/landlord/properties" element={<MyProperties />} />
             <Route path="/landlord/bookings" element={<BookingRequests />} />
             <Route path="/landlord/reviews" element={<LandlordReviews />} />
