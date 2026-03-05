@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Home, Menu, X } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Home, Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+import { useAuth } from "../context";
+import { ConfirmModal } from "../components";
 
 /**
  * Public Navbar Component
@@ -9,7 +11,33 @@ import { Home, Menu, X } from "lucide-react";
 const PublicNavbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated, isStudent, isLandlord, isAdmin, logout } = useAuth();
+
+  // Get dashboard path based on user role
+  const getDashboardPath = () => {
+    if (isAdmin) return "/admin/dashboard";
+    if (isLandlord) return "/landlord/dashboard";
+    if (isStudent) return "/student/dashboard";
+    return "/";
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+      setShowLogoutModal(false);
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   // Handle scroll for background effect
   useEffect(() => {
@@ -80,18 +108,39 @@ const PublicNavbar = () => {
 
           {/* Auth Buttons - Right (Desktop) */}
           <div className="hidden items-center gap-3 md:flex">
-            <Link
-              to="/login"
-              className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:text-blue-600"
-            >
-              Login
-            </Link>
-            <Link
-              to="/register"
-              className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-2.5 text-sm font-medium text-white shadow-md shadow-blue-600/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-600/30"
-            >
-              Register
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to={getDashboardPath()}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:text-blue-600"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => setShowLogoutModal(true)}
+                  className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:text-blue-600"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-2.5 text-sm font-medium text-white shadow-md shadow-blue-600/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-600/30"
+                >
+                  Register
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -131,22 +180,59 @@ const PublicNavbar = () => {
 
             {/* Mobile Auth Buttons */}
             <div className="mt-4 flex flex-col gap-2 border-t border-gray-100 pt-4">
-              <Link
-                to="/login"
-                className="rounded-xl border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-3 text-center text-sm font-medium text-white shadow-md shadow-blue-600/20 transition-all hover:shadow-lg"
-              >
-                Register
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    to={getDashboardPath()}
+                    className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setShowLogoutModal(true);
+                    }}
+                    className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="rounded-xl border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-3 text-center text-sm font-medium text-white shadow-md shadow-blue-600/20 transition-all hover:shadow-lg"
+                  >
+                    Register
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
       </nav>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        confirmText="Logout"
+        cancelText="Cancel"
+        variant="warning"
+        loading={loggingOut}
+      />
     </header>
   );
 };

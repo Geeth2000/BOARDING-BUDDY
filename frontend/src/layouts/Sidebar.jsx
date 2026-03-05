@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context";
+import { ConfirmModal } from "../components";
 import {
   Home,
   Building2,
@@ -61,10 +63,24 @@ const menuConfig = {
 const Sidebar = ({ isOpen, isCollapsed, onClose, onToggleCollapse }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+      setShowLogoutModal(false);
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   // Get menu items based on user role
@@ -190,7 +206,7 @@ const Sidebar = ({ isOpen, isCollapsed, onClose, onToggleCollapse }) => {
       {/* Logout button */}
       <div className="border-t border-slate-700 p-4">
         <button
-          onClick={handleLogout}
+          onClick={handleLogoutClick}
           className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-slate-300 transition-colors hover:bg-red-600 hover:text-white ${
             isCollapsed ? "justify-center" : ""
           }`}
@@ -200,6 +216,19 @@ const Sidebar = ({ isOpen, isCollapsed, onClose, onToggleCollapse }) => {
           {!isCollapsed && <span>Logout</span>}
         </button>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        confirmText="Logout"
+        cancelText="Cancel"
+        variant="warning"
+        loading={loggingOut}
+      />
     </aside>
   );
 };

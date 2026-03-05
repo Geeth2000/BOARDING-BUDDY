@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context";
+import { ConfirmModal } from "../components";
 import {
   Menu,
   Bell,
@@ -17,7 +18,10 @@ import {
  */
 const Navbar = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
 
@@ -32,6 +36,24 @@ const Navbar = ({ onMenuClick }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleLogoutClick = () => {
+    setDropdownOpen(false);
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+      setShowLogoutModal(false);
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -136,7 +158,7 @@ const Navbar = ({ onMenuClick }) => {
               {/* Logout */}
               <div className="border-t border-gray-200 py-2">
                 <button
-                  onClick={logout}
+                  onClick={handleLogoutClick}
                   className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                 >
                   <LogOut className="h-4 w-4" />
@@ -147,6 +169,19 @@ const Navbar = ({ onMenuClick }) => {
           )}
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        confirmText="Logout"
+        cancelText="Cancel"
+        variant="warning"
+        loading={loggingOut}
+      />
     </header>
   );
 };

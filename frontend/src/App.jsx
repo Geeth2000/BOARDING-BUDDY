@@ -16,6 +16,10 @@ import {
   Properties,
   PropertyDetails,
   StudentDashboard,
+  StudentProperties,
+  StudentBookings,
+  StudentReviews,
+  StudentMessages,
   LandlordDashboard,
   AddProperty,
   EditProperty,
@@ -61,22 +65,10 @@ function App() {
           {/* Student routes */}
           <Route element={<StudentRoute />}>
             <Route path="/student/dashboard" element={<StudentDashboard />} />
-            <Route
-              path="/student/properties"
-              element={<PlaceholderPage title="Browse Properties" />}
-            />
-            <Route
-              path="/student/bookings"
-              element={<PlaceholderPage title="My Bookings" />}
-            />
-            <Route
-              path="/student/reviews"
-              element={<PlaceholderPage title="My Reviews" />}
-            />
-            <Route
-              path="/student/messages"
-              element={<PlaceholderPage title="Messages" />}
-            />
+            <Route path="/student/properties" element={<StudentProperties />} />
+            <Route path="/student/bookings" element={<StudentBookings />} />
+            <Route path="/student/reviews" element={<StudentReviews />} />
+            <Route path="/student/messages" element={<StudentMessages />} />
           </Route>
 
           {/* Landlord routes */}
@@ -111,22 +103,6 @@ function App() {
       {/* 404 - Not Found */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
-  );
-}
-
-/**
- * Placeholder Page Component
- * Used for routes that are not yet implemented
- */
-function PlaceholderPage({ title }) {
-  return (
-    <div className="flex flex-col items-center justify-center rounded-xl bg-white p-12 text-center shadow-sm">
-      <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
-      <p className="mt-2 text-gray-600">This page is under construction.</p>
-      <div className="mt-6 flex h-32 w-32 items-center justify-center rounded-full bg-gray-100">
-        <span className="text-6xl">🚧</span>
-      </div>
-    </div>
   );
 }
 

@@ -11,6 +11,10 @@ export { default as PropertyDetails } from "./public/PropertyDetails";
 
 // Student pages
 export { default as StudentDashboard } from "./student/Dashboard";
+export { default as StudentProperties } from "./student/Properties";
+export { default as StudentBookings } from "./student/Bookings";
+export { default as StudentReviews } from "./student/Reviews";
+export { default as StudentMessages } from "./student/Messages";
 
 // Landlord pages
 export { default as LandlordDashboard } from "./landlord/Dashboard";
