@@ -12,28 +12,43 @@ import {
   MapPin,
   CheckCircle,
   Clock,
+  XCircle,
+  Check,
+  X,
+  Filter,
 } from "lucide-react";
 
 /**
  * Admin Properties Page
- * Display and manage all properties
+ * Display and manage all properties with approval system
  */
 const AdminProperties = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState(null);
+  const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0 });
+  const [statusFilter, setStatusFilter] = useState("");
   const [deleteModal, setDeleteModal] = useState({
     open: false,
     property: null,
   });
-  const [deleting, setDeleting] = useState(false);
+  const [approvalModal, setApprovalModal] = useState({
+    open: false,
+    property: null,
+    action: null, // 'approve' or 'reject'
+  });
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
 
   const fetchProperties = async (page = 1) => {
     setLoading(true);
     try {
-      const { data } = await adminAPI.getProperties(page);
+      const { data } = await adminAPI.getProperties(page, 10, statusFilter);
       setProperties(data.data);
       setPagination(data.pagination);
+      if (data.stats) {
+        setStats(data.stats);
+      }
     } catch (error) {
       console.error("Error fetching properties:", error);
     } finally {
@@ -43,12 +58,12 @@ const AdminProperties = () => {
 
   useEffect(() => {
     fetchProperties();
-  }, []);
+  }, [statusFilter]);
 
   const handleDelete = async () => {
     if (!deleteModal.property) return;
 
-    setDeleting(true);
+    setActionLoading(true);
     try {
       await adminAPI.deleteProperty(deleteModal.property._id);
       setDeleteModal({ open: false, property: null });
@@ -56,8 +71,59 @@ const AdminProperties = () => {
     } catch (error) {
       console.error("Error deleting property:", error);
     } finally {
-      setDeleting(false);
+      setActionLoading(false);
     }
+  };
+
+  const handleApprovalAction = async () => {
+    if (!approvalModal.property) return;
+
+    setActionLoading(true);
+    try {
+      const status =
+        approvalModal.action === "approve" ? "Approved" : "Rejected";
+      await adminAPI.updatePropertyStatus(
+        approvalModal.property._id,
+        status,
+        approvalModal.action === "reject" ? rejectionReason : "",
+      );
+      setApprovalModal({ open: false, property: null, action: null });
+      setRejectionReason("");
+      fetchProperties(pagination?.page || 1);
+    } catch (error) {
+      console.error("Error updating property status:", error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const config = {
+      Pending: {
+        bg: "bg-yellow-100 text-yellow-700",
+        icon: Clock,
+      },
+      Approved: {
+        bg: "bg-green-100 text-green-700",
+        icon: CheckCircle,
+      },
+      Rejected: {
+        bg: "bg-red-100 text-red-700",
+        icon: XCircle,
+      },
+    };
+
+    const statusConfig = config[status] || config.Pending;
+    const Icon = statusConfig.icon;
+
+    return (
+      <span
+        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${statusConfig.bg}`}
+      >
+        <Icon className="h-3 w-3" />
+        {status}
+      </span>
+    );
   };
 
   const columns = [
@@ -68,7 +134,7 @@ const AdminProperties = () => {
           <div className="h-12 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
             {property.images && property.images.length > 0 ? (
               <img
-                src={property.images[0]}
+                src={property.images[0]?.url || property.images[0]}
                 alt={property.title}
                 className="h-full w-full object-cover"
               />
@@ -83,7 +149,9 @@ const AdminProperties = () => {
             <div className="flex items-center gap-1 text-sm text-gray-500">
               <MapPin className="h-3 w-3" />
               <span className="max-w-[200px] truncate">
-                {property.location || property.address?.city || "No location"}
+                {property.location?.city ||
+                  property.location?.address ||
+                  "No location"}
               </span>
             </div>
           </div>
@@ -94,7 +162,7 @@ const AdminProperties = () => {
       header: "Price",
       render: (property) => (
         <div className="font-semibold text-blue-600">
-          {formatLKR(property.price || 0)}
+          {formatLKR(property.rent || 0)}
           <span className="text-xs font-normal text-gray-500">/mo</span>
         </div>
       ),
@@ -103,41 +171,53 @@ const AdminProperties = () => {
       header: "Landlord",
       render: (property) => (
         <div>
-          <p className="text-gray-900">{property.landlord?.name || "N/A"}</p>
+          <p className="text-gray-900">{property.landlordId?.name || "N/A"}</p>
           <p className="text-sm text-gray-500">
-            {property.landlord?.email || ""}
+            {property.landlordId?.email || ""}
           </p>
+          {property.landlordId?.isVerified && (
+            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-600">
+              <CheckCircle className="h-3 w-3" />
+              Verified
+            </span>
+          )}
         </div>
       ),
     },
     {
       header: "Status",
-      render: (property) => {
-        const isAvailable = property.isAvailable !== false;
-        return (
-          <span
-            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
-              isAvailable
-                ? "bg-green-100 text-green-700"
-                : "bg-yellow-100 text-yellow-700"
-            }`}
-          >
-            {isAvailable ? (
-              <CheckCircle className="h-3 w-3" />
-            ) : (
-              <Clock className="h-3 w-3" />
-            )}
-            {isAvailable ? "Available" : "Booked"}
-          </span>
-        );
-      },
+      render: (property) => getStatusBadge(property.status),
     },
     {
       header: "Actions",
       className: "text-right",
       cellClassName: "text-right",
       render: (property) => (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-1">
+          {/* Approve Button */}
+          {property.status !== "Approved" && (
+            <button
+              onClick={() =>
+                setApprovalModal({ open: true, property, action: "approve" })
+              }
+              className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-green-50 hover:text-green-600"
+              title="Approve"
+            >
+              <Check className="h-4 w-4" />
+            </button>
+          )}
+          {/* Reject Button */}
+          {property.status !== "Rejected" && (
+            <button
+              onClick={() =>
+                setApprovalModal({ open: true, property, action: "reject" })
+              }
+              className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600"
+              title="Reject"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
           <Link
             to={`/properties/${property._id}`}
             className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600"
@@ -145,15 +225,6 @@ const AdminProperties = () => {
           >
             <Eye className="h-4 w-4" />
           </Link>
-          <button
-            onClick={() => {
-              /* TODO: Edit modal */
-            }}
-            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-yellow-50 hover:text-yellow-600"
-            title="Edit"
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
           <button
             onClick={() => setDeleteModal({ open: true, property })}
             className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600"
@@ -173,12 +244,90 @@ const AdminProperties = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Properties</h1>
           <p className="mt-1 text-gray-600">
-            Manage all property listings on the platform
+            Manage all property listings and approvals
           </p>
         </div>
-        <button className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700">
-          <Plus className="h-4 w-4" />
-          Add Property
+      </div>
+
+      {/* Stats Cards */}
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <button
+          onClick={() => setStatusFilter("")}
+          className={`rounded-xl p-4 text-left transition-all ${
+            statusFilter === ""
+              ? "bg-blue-100 ring-2 ring-blue-500"
+              : "bg-blue-50 hover:bg-blue-100"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-blue-100 p-2">
+              <Building2 className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-blue-600">All Properties</p>
+              <p className="text-xl font-bold text-blue-700">
+                {stats.pending + stats.approved + stats.rejected}
+              </p>
+            </div>
+          </div>
+        </button>
+        <button
+          onClick={() => setStatusFilter("Pending")}
+          className={`rounded-xl p-4 text-left transition-all ${
+            statusFilter === "Pending"
+              ? "bg-yellow-100 ring-2 ring-yellow-500"
+              : "bg-yellow-50 hover:bg-yellow-100"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-yellow-100 p-2">
+              <Clock className="h-5 w-5 text-yellow-600" />
+            </div>
+            <div>
+              <p className="text-sm text-yellow-600">Pending Approval</p>
+              <p className="text-xl font-bold text-yellow-700">
+                {stats.pending}
+              </p>
+            </div>
+          </div>
+        </button>
+        <button
+          onClick={() => setStatusFilter("Approved")}
+          className={`rounded-xl p-4 text-left transition-all ${
+            statusFilter === "Approved"
+              ? "bg-green-100 ring-2 ring-green-500"
+              : "bg-green-50 hover:bg-green-100"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-green-100 p-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-green-600">Approved</p>
+              <p className="text-xl font-bold text-green-700">
+                {stats.approved}
+              </p>
+            </div>
+          </div>
+        </button>
+        <button
+          onClick={() => setStatusFilter("Rejected")}
+          className={`rounded-xl p-4 text-left transition-all ${
+            statusFilter === "Rejected"
+              ? "bg-red-100 ring-2 ring-red-500"
+              : "bg-red-50 hover:bg-red-100"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-red-100 p-2">
+              <XCircle className="h-5 w-5 text-red-600" />
+            </div>
+            <div>
+              <p className="text-sm text-red-600">Rejected</p>
+              <p className="text-xl font-bold text-red-700">{stats.rejected}</p>
+            </div>
+          </div>
         </button>
       </div>
 
@@ -202,8 +351,46 @@ const AdminProperties = () => {
         message={`Are you sure you want to delete "${deleteModal.property?.title}"? This action cannot be undone.`}
         confirmText="Delete"
         variant="danger"
-        loading={deleting}
+        loading={actionLoading}
       />
+
+      {/* Approval/Rejection Modal */}
+      <ConfirmModal
+        isOpen={approvalModal.open}
+        onClose={() => {
+          setApprovalModal({ open: false, property: null, action: null });
+          setRejectionReason("");
+        }}
+        onConfirm={handleApprovalAction}
+        title={
+          approvalModal.action === "approve"
+            ? "Approve Property"
+            : "Reject Property"
+        }
+        message={
+          approvalModal.action === "approve"
+            ? `Are you sure you want to approve "${approvalModal.property?.title}"? It will be visible to all users.`
+            : `Are you sure you want to reject "${approvalModal.property?.title}"?`
+        }
+        confirmText={approvalModal.action === "approve" ? "Approve" : "Reject"}
+        variant={approvalModal.action === "approve" ? "success" : "danger"}
+        loading={actionLoading}
+      >
+        {approvalModal.action === "reject" && (
+          <div className="mt-4">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Rejection Reason (Optional)
+            </label>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Enter reason for rejection..."
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              rows={3}
+            />
+          </div>
+        )}
+      </ConfirmModal>
     </div>
   );
 };

@@ -33,6 +33,16 @@ const createProperty = asyncHandler(async (req, res, next) => {
   }
 
   // Create property with landlord ID from authenticated user
+  // Check if landlord is verified
+  if (!req.user.isVerified) {
+    return next(
+      new AppError(
+        "Your account must be verified by an admin before you can add properties",
+        403,
+      ),
+    );
+  }
+
   const property = await Property.create({
     title,
     location,
@@ -47,8 +57,7 @@ const createProperty = asyncHandler(async (req, res, next) => {
     bathrooms,
     availableFrom,
     landlordId: req.user._id,
-    isApproved: false,
-    isVerified: false,
+    status: "Pending",
   });
 
   res.status(201).json({
@@ -69,9 +78,9 @@ const getApprovedProperties = asyncHandler(async (req, res, next) => {
   const limit = parseInt(req.query.limit, 10) || 10;
   const skip = (page - 1) * limit;
 
-  // Build filter query
+  // Build filter query - only show approved properties
   const filter = {
-    isApproved: true,
+    status: "Approved",
     isActive: true,
   };
 
@@ -136,7 +145,7 @@ const getPropertyById = asyncHandler(async (req, res, next) => {
     req.user && property.landlordId._id.toString() === req.user._id.toString();
   const isAdmin = req.user && req.user.role === "admin";
 
-  if (!property.isApproved && !isOwner && !isAdmin) {
+  if (property.status !== "Approved" && !isOwner && !isAdmin) {
     return next(new AppError("Property not found", 404));
   }
 
@@ -205,17 +214,18 @@ const updateProperty = asyncHandler(async (req, res, next) => {
     return next(new AppError("Not authorized to update this property", 403));
   }
 
-  // Prevent landlords from self-approving
-  if (!isAdmin && req.body.isApproved !== undefined) {
-    delete req.body.isApproved;
+  // Prevent landlords from changing status
+  if (!isAdmin && req.body.status !== undefined) {
+    delete req.body.status;
   }
-  if (!isAdmin && req.body.isVerified !== undefined) {
-    delete req.body.isVerified;
+  if (!isAdmin && req.body.rejectionReason !== undefined) {
+    delete req.body.rejectionReason;
   }
 
-  // If landlord updates, reset approval status
+  // If landlord updates, reset status to pending for re-approval
   if (isOwner && !isAdmin) {
-    req.body.isApproved = false;
+    req.body.status = "Pending";
+    req.body.rejectionReason = "";
   }
 
   property = await Property.findByIdAndUpdate(req.params.id, req.body, {
@@ -245,7 +255,8 @@ const approveProperty = asyncHandler(async (req, res, next) => {
     return next(new AppError("Property not found", 404));
   }
 
-  property.isApproved = true;
+  property.status = "Approved";
+  property.rejectionReason = "";
   await property.save();
 
   res.status(200).json({
@@ -267,12 +278,15 @@ const rejectProperty = asyncHandler(async (req, res, next) => {
     return next(new AppError("Property not found", 404));
   }
 
-  property.isApproved = false;
+  const { reason } = req.body;
+
+  property.status = "Rejected";
+  property.rejectionReason = reason || "Property does not meet our guidelines";
   await property.save();
 
   res.status(200).json({
     success: true,
-    message: "Property rejected/unapproved",
+    message: "Property rejected",
     data: property,
   });
 });
@@ -289,26 +303,30 @@ const getAllPropertiesAdmin = asyncHandler(async (req, res, next) => {
 
   const filter = {};
 
-  // Filter by approval status
-  if (req.query.approved === "true") {
-    filter.isApproved = true;
-  } else if (req.query.approved === "false") {
-    filter.isApproved = false;
+  // Filter by status
+  if (req.query.status) {
+    filter.status = req.query.status;
   }
 
   const properties = await Property.find(filter)
-    .populate("landlordId", "name email role")
+    .populate("landlordId", "name email role isVerified")
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
 
   const total = await Property.countDocuments(filter);
-  const pendingCount = await Property.countDocuments({ isApproved: false });
+  const pendingCount = await Property.countDocuments({ status: "Pending" });
+  const approvedCount = await Property.countDocuments({ status: "Approved" });
+  const rejectedCount = await Property.countDocuments({ status: "Rejected" });
 
   res.status(200).json({
     success: true,
     count: properties.length,
-    pendingApproval: pendingCount,
+    stats: {
+      pending: pendingCount,
+      approved: approvedCount,
+      rejected: rejectedCount,
+    },
     pagination: {
       page,
       limit,

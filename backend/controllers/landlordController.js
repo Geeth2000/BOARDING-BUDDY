@@ -12,6 +12,16 @@ const { AppError } = require("../middleware/errorMiddleware");
  * @access  Private (Landlord only)
  */
 const createProperty = asyncHandler(async (req, res, next) => {
+  // Check if landlord is verified
+  if (!req.user.isVerified) {
+    return next(
+      new AppError(
+        "Your account must be verified by an admin before you can add properties",
+        403,
+      ),
+    );
+  }
+
   const {
     title,
     location,
@@ -51,7 +61,7 @@ const createProperty = asyncHandler(async (req, res, next) => {
     genderPreference,
     availableFrom,
     landlordId: req.user._id,
-    isApproved: false, // Requires admin approval
+    status: "Pending",
   });
 
   res.status(201).json({
@@ -73,18 +83,19 @@ const getMyProperties = asyncHandler(async (req, res, next) => {
 
   const query = { landlordId: req.user._id };
 
-  // Filter by status
-  if (req.query.status === "active") {
-    query.isActive = true;
-  } else if (req.query.status === "inactive") {
-    query.isActive = false;
+  // Filter by status (Pending, Approved, Rejected)
+  if (
+    req.query.status &&
+    ["Pending", "Approved", "Rejected"].includes(req.query.status)
+  ) {
+    query.status = req.query.status;
   }
 
-  // Filter by approval
-  if (req.query.approved === "true") {
-    query.isApproved = true;
-  } else if (req.query.approved === "false") {
-    query.isApproved = false;
+  // Filter by active status
+  if (req.query.active === "true") {
+    query.isActive = true;
+  } else if (req.query.active === "false") {
+    query.isActive = false;
   }
 
   const total = await Property.countDocuments(query);
@@ -93,9 +104,28 @@ const getMyProperties = asyncHandler(async (req, res, next) => {
     .skip(skip)
     .limit(limit);
 
+  // Get counts by status
+  const pendingCount = await Property.countDocuments({
+    landlordId: req.user._id,
+    status: "Pending",
+  });
+  const approvedCount = await Property.countDocuments({
+    landlordId: req.user._id,
+    status: "Approved",
+  });
+  const rejectedCount = await Property.countDocuments({
+    landlordId: req.user._id,
+    status: "Rejected",
+  });
+
   res.status(200).json({
     success: true,
     count: properties.length,
+    stats: {
+      pending: pendingCount,
+      approved: approvedCount,
+      rejected: rejectedCount,
+    },
     pagination: {
       page,
       limit,
@@ -167,6 +197,10 @@ const updateProperty = asyncHandler(async (req, res, next) => {
     }
   });
 
+  // Reset status to pending for re-approval after any edit
+  updates.status = "Pending";
+  updates.rejectionReason = "";
+
   property = await Property.findByIdAndUpdate(req.params.id, updates, {
     new: true,
     runValidators: true,
@@ -174,7 +208,7 @@ const updateProperty = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message: "Property updated successfully",
+    message: "Property updated successfully. Awaiting admin re-approval.",
     data: property,
   });
 });

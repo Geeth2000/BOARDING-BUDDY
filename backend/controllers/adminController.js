@@ -15,17 +15,32 @@ const getAllProperties = asyncHandler(async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  const properties = await Property.find()
-    .populate("landlord", "name email")
+  const filter = {};
+
+  // Filter by status
+  if (req.query.status) {
+    filter.status = req.query.status;
+  }
+
+  const properties = await Property.find(filter)
+    .populate("landlordId", "name email isVerified")
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
 
-  const total = await Property.countDocuments();
+  const total = await Property.countDocuments(filter);
+  const pendingCount = await Property.countDocuments({ status: "Pending" });
+  const approvedCount = await Property.countDocuments({ status: "Approved" });
+  const rejectedCount = await Property.countDocuments({ status: "Rejected" });
 
   res.status(200).json({
     success: true,
     data: properties,
+    stats: {
+      pending: pendingCount,
+      approved: approvedCount,
+      rejected: rejectedCount,
+    },
     pagination: {
       page,
       limit,
@@ -292,6 +307,11 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     usersByRole,
     recentUsers,
     recentBookings,
+    pendingProperties,
+    approvedProperties,
+    rejectedProperties,
+    verifiedUsers,
+    unverifiedUsers,
   ] = await Promise.all([
     User.countDocuments(),
     Property.countDocuments(),
@@ -302,12 +322,17 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     User.find()
       .sort({ createdAt: -1 })
       .limit(5)
-      .select("name email role createdAt"),
+      .select("name email role createdAt isVerified"),
     Booking.find()
       .sort({ createdAt: -1 })
       .limit(5)
       .populate("property", "title")
       .populate("student", "name"),
+    Property.countDocuments({ status: "Pending" }),
+    Property.countDocuments({ status: "Approved" }),
+    Property.countDocuments({ status: "Rejected" }),
+    User.countDocuments({ isVerified: true }),
+    User.countDocuments({ isVerified: false }),
   ]);
 
   res.status(200).json({
@@ -324,7 +349,100 @@ const getDashboardStats = asyncHandler(async (req, res) => {
       }, {}),
       recentUsers,
       recentBookings,
+      propertyStats: {
+        pending: pendingProperties,
+        approved: approvedProperties,
+        rejected: rejectedProperties,
+      },
+      userVerification: {
+        verified: verifiedUsers,
+        unverified: unverifiedUsers,
+      },
     },
+  });
+});
+
+/**
+ * @desc    Verify user (admin)
+ * @route   PUT /api/admin/users/:id/verify
+ * @access  Private/Admin
+ */
+const verifyUser = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    return next(new AppError("User not found", 404));
+  }
+
+  user.isVerified = true;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: `User "${user.name}" has been verified successfully`,
+    data: user,
+  });
+});
+
+/**
+ * @desc    Unverify user (admin)
+ * @route   PUT /api/admin/users/:id/unverify
+ * @access  Private/Admin
+ */
+const unverifyUser = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    return next(new AppError("User not found", 404));
+  }
+
+  user.isVerified = false;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: `User "${user.name}" verification has been revoked`,
+    data: user,
+  });
+});
+
+/**
+ * @desc    Update property status (approve/reject)
+ * @route   PUT /api/admin/properties/:id/status
+ * @access  Private/Admin
+ */
+const updatePropertyStatus = asyncHandler(async (req, res, next) => {
+  const { status, rejectionReason } = req.body;
+  const validStatuses = ["Pending", "Approved", "Rejected"];
+
+  if (!validStatuses.includes(status)) {
+    return next(
+      new AppError(
+        `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
+        400,
+      ),
+    );
+  }
+
+  const property = await Property.findById(req.params.id);
+
+  if (!property) {
+    return next(new AppError("Property not found", 404));
+  }
+
+  property.status = status;
+  if (status === "Rejected" && rejectionReason) {
+    property.rejectionReason = rejectionReason;
+  } else if (status === "Approved") {
+    property.rejectionReason = "";
+  }
+
+  await property.save();
+
+  res.status(200).json({
+    success: true,
+    message: `Property ${status.toLowerCase()} successfully`,
+    data: property,
   });
 });
 
@@ -339,4 +457,7 @@ module.exports = {
   getAllReviews,
   deleteReview,
   getDashboardStats,
+  verifyUser,
+  unverifyUser,
+  updatePropertyStatus,
 };

@@ -8,8 +8,12 @@ export const adminAPI = {
   getStats: () => api.get("/admin/stats"),
 
   // Properties
-  getProperties: (page = 1, limit = 10) =>
-    api.get(`/admin/properties?page=${page}&limit=${limit}`),
+  getProperties: (page = 1, limit = 10, status = "") =>
+    api.get(
+      `/admin/properties?page=${page}&limit=${limit}${status ? `&status=${status}` : ""}`,
+    ),
+  updatePropertyStatus: (id, status, rejectionReason = "") =>
+    api.put(`/admin/properties/${id}/status`, { status, rejectionReason }),
   deleteProperty: (id) => api.delete(`/admin/properties/${id}`),
 
   // Bookings
@@ -22,6 +26,8 @@ export const adminAPI = {
   getUsers: (page = 1, limit = 10) =>
     api.get(`/admin/users?page=${page}&limit=${limit}`),
   updateUserRole: (id, role) => api.put(`/admin/users/${id}/role`, { role }),
+  verifyUser: (id) => api.put(`/admin/users/${id}/verify`),
+  unverifyUser: (id) => api.put(`/admin/users/${id}/unverify`),
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
 
   // Reviews

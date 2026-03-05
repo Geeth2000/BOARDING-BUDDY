@@ -10,11 +10,14 @@ import {
   Mail,
   Calendar,
   CheckCircle,
+  XCircle,
+  UserCheck,
+  UserX,
 } from "lucide-react";
 
 /**
  * Admin Users Page
- * View and manage all users
+ * View and manage all users with verification system
  */
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -25,6 +28,11 @@ const AdminUsers = () => {
     open: false,
     user: null,
     newRole: null,
+  });
+  const [verifyModal, setVerifyModal] = useState({
+    open: false,
+    user: null,
+    action: null, // 'verify' or 'unverify'
   });
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -70,6 +78,25 @@ const AdminUsers = () => {
       fetchUsers(pagination?.page || 1);
     } catch (error) {
       console.error("Error updating user role:", error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleVerifyAction = async () => {
+    if (!verifyModal.user) return;
+
+    setActionLoading(true);
+    try {
+      if (verifyModal.action === "verify") {
+        await adminAPI.verifyUser(verifyModal.user._id);
+      } else {
+        await adminAPI.unverifyUser(verifyModal.user._id);
+      }
+      setVerifyModal({ open: false, user: null, action: null });
+      fetchUsers(pagination?.page || 1);
+    } catch (error) {
+      console.error("Error updating user verification:", error);
     } finally {
       setActionLoading(false);
     }
@@ -132,7 +159,15 @@ const AdminUsers = () => {
             )}
           </div>
           <div>
-            <p className="font-medium text-gray-900">{user.name || "N/A"}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-medium text-gray-900">{user.name || "N/A"}</p>
+              {user.isVerified && (
+                <CheckCircle
+                  className="h-4 w-4 text-green-500"
+                  title="Verified User"
+                />
+              )}
+            </div>
             <div className="flex items-center gap-1 text-sm text-gray-500">
               <Mail className="h-3 w-3" />
               <span className="max-w-[180px] truncate">{user.email}</span>
@@ -155,7 +190,7 @@ const AdminUsers = () => {
       ),
     },
     {
-      header: "Verified",
+      header: "Verification",
       render: (user) => (
         <span
           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -164,8 +199,12 @@ const AdminUsers = () => {
               : "bg-gray-100 text-gray-600"
           }`}
         >
-          <CheckCircle className="h-3 w-3" />
-          {user.isVerified ? "Verified" : "Pending"}
+          {user.isVerified ? (
+            <CheckCircle className="h-3 w-3" />
+          ) : (
+            <XCircle className="h-3 w-3" />
+          )}
+          {user.isVerified ? "Verified" : "Not Verified"}
         </span>
       ),
     },
@@ -174,7 +213,29 @@ const AdminUsers = () => {
       className: "text-right",
       cellClassName: "text-right",
       render: (user) => (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-1">
+          {/* Verify/Unverify Button */}
+          {user.isVerified ? (
+            <button
+              onClick={() =>
+                setVerifyModal({ open: true, user, action: "unverify" })
+              }
+              className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-yellow-50 hover:text-yellow-600"
+              title="Unverify User"
+            >
+              <UserX className="h-4 w-4" />
+            </button>
+          ) : (
+            <button
+              onClick={() =>
+                setVerifyModal({ open: true, user, action: "verify" })
+              }
+              className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-green-50 hover:text-green-600"
+              title="Verify User"
+            >
+              <UserCheck className="h-4 w-4" />
+            </button>
+          )}
           {/* Role Toggle Dropdown */}
           <select
             value={user.role}
@@ -209,12 +270,12 @@ const AdminUsers = () => {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Users</h1>
         <p className="mt-1 text-gray-600">
-          Manage all registered users and their roles
+          Manage all registered users, roles, and verifications
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <div className="rounded-xl bg-blue-50 p-4">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-blue-100 p-2">
@@ -265,6 +326,19 @@ const AdminUsers = () => {
             </div>
           </div>
         </div>
+        <div className="rounded-xl bg-emerald-50 p-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-emerald-100 p-2">
+              <CheckCircle className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-sm text-emerald-600">Verified</p>
+              <p className="text-xl font-bold text-emerald-700">
+                {users.filter((u) => u.isVerified).length}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Table */}
@@ -299,6 +373,34 @@ const AdminUsers = () => {
         message={`Are you sure you want to change "${roleModal.user?.name}"'s role to ${roleModal.newRole}?`}
         confirmText="Change Role"
         variant="warning"
+        loading={actionLoading}
+      />
+
+      {/* Verification Modal */}
+      <ConfirmModal
+        isOpen={verifyModal.open}
+        onClose={() =>
+          setVerifyModal({ open: false, user: null, action: null })
+        }
+        onConfirm={handleVerifyAction}
+        title={
+          verifyModal.action === "verify" ? "Verify User" : "Unverify User"
+        }
+        message={
+          verifyModal.action === "verify"
+            ? `Are you sure you want to verify "${verifyModal.user?.name}"? ${
+                verifyModal.user?.role === "landlord"
+                  ? "This will allow them to add properties."
+                  : ""
+              }`
+            : `Are you sure you want to unverify "${verifyModal.user?.name}"? ${
+                verifyModal.user?.role === "landlord"
+                  ? "This will prevent them from adding new properties."
+                  : ""
+              }`
+        }
+        confirmText={verifyModal.action === "verify" ? "Verify" : "Unverify"}
+        variant={verifyModal.action === "verify" ? "success" : "warning"}
         loading={actionLoading}
       />
     </div>

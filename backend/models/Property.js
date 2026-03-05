@@ -109,13 +109,14 @@ const propertySchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    isApproved: {
-      type: Boolean,
-      default: false,
+    status: {
+      type: String,
+      enum: ["Pending", "Approved", "Rejected"],
+      default: "Pending",
     },
-    isVerified: {
-      type: Boolean,
-      default: false,
+    rejectionReason: {
+      type: String,
+      default: "",
     },
     isActive: {
       type: Boolean,
@@ -133,8 +134,13 @@ const propertySchema = new mongoose.Schema(
 propertySchema.index({ landlordId: 1 });
 propertySchema.index({ "location.city": 1 });
 propertySchema.index({ rent: 1 });
-propertySchema.index({ isApproved: 1, isActive: 1 });
+propertySchema.index({ status: 1, isActive: 1 });
 propertySchema.index({ genderPreference: 1 });
+
+// Virtual for backward compatibility
+propertySchema.virtual("isApproved").get(function () {
+  return this.status === "Approved";
+});
 
 // Text index for search functionality
 propertySchema.index({

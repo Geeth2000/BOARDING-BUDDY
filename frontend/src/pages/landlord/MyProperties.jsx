@@ -70,27 +70,42 @@ const MyProperties = () => {
   };
 
   const getStatusBadge = (property) => {
-    if (!property.isApproved) {
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-700">
-          <Clock className="h-3 w-3" />
-          Pending Approval
-        </span>
-      );
-    }
-    if (!property.isActive) {
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
-          <XCircle className="h-3 w-3" />
-          Inactive
-        </span>
-      );
-    }
+    const statusConfig = {
+      Pending: {
+        bg: "bg-yellow-100 text-yellow-700",
+        icon: Clock,
+        label: "Pending Approval",
+      },
+      Approved: {
+        bg: "bg-green-100 text-green-700",
+        icon: CheckCircle,
+        label: "Approved",
+      },
+      Rejected: {
+        bg: "bg-red-100 text-red-700",
+        icon: XCircle,
+        label: "Rejected",
+      },
+    };
+
+    const status = property.status || "Pending";
+    const config = statusConfig[status] || statusConfig.Pending;
+    const Icon = config.icon;
+
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
-        <CheckCircle className="h-3 w-3" />
-        Active
-      </span>
+      <div>
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${config.bg}`}
+        >
+          <Icon className="h-3 w-3" />
+          {config.label}
+        </span>
+        {status === "Rejected" && property.rejectionReason && (
+          <p className="mt-1 text-xs text-red-600">
+            Reason: {property.rejectionReason}
+          </p>
+        )}
+      </div>
     );
   };
 

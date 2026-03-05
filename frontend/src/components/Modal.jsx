@@ -129,6 +129,7 @@ export const ConfirmModal = ({
   cancelText = "Cancel",
   variant = "danger",
   loading = false,
+  children,
 }) => {
   const buttonVariants = {
     danger: "bg-red-600 hover:bg-red-700 focus:ring-red-500",
@@ -165,6 +166,7 @@ export const ConfirmModal = ({
       }
     >
       <p className="text-gray-600">{message}</p>
+      {children}
     </Modal>
   );
 };
