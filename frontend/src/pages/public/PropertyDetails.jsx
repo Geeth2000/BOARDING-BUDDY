@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { getPropertyById } from "../../data/properties";
 import { PropertyDetailsNavbar } from "../../components";
+import { formatLKR } from "../../utils/currency";
 import {
   MapPin,
   Bed,
@@ -226,7 +227,7 @@ const PropertyDetails = () => {
                 </div>
                 <div className="text-right">
                   <div className="text-3xl font-bold text-blue-600">
-                    ${property.price.toLocaleString()}
+                    {formatLKR(property.price)}
                   </div>
                   <div className="text-gray-500">per month</div>
                 </div>
@@ -407,7 +408,7 @@ const ContactModal = ({ property, onClose }) => {
     name: "",
     email: "",
     phone: "",
-    message: `Hi, I'm interested in "${property.title}" listed at $${property.price.toLocaleString()}/month. I would like to schedule a viewing.`,
+    message: `Hi, I'm interested in "${property.title}" listed at ${formatLKR(property.price)}/month. I would like to schedule a viewing.`,
   });
   const [submitted, setSubmitted] = useState(false);
 

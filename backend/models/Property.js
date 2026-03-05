@@ -23,11 +23,11 @@ const propertySchema = new mongoose.Schema(
         required: [true, "Please add a city"],
         trim: true,
       },
-      state: {
+      district: {
         type: String,
         trim: true,
       },
-      zipCode: {
+      postalCode: {
         type: String,
         trim: true,
       },
@@ -145,10 +145,10 @@ propertySchema.index({
 });
 
 /**
- * Virtual for formatted rent display
+ * Virtual for formatted rent display (LKR)
  */
 propertySchema.virtual("formattedRent").get(function () {
-  return `$${this.rent.toLocaleString()}/month`;
+  return `Rs. ${this.rent.toLocaleString()}/month`;
 });
 
 module.exports = mongoose.model("Property", propertySchema);

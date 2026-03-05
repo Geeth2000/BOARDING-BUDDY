@@ -1,9 +1,10 @@
 import { useAuth } from "../../context";
+import { formatLKR } from "../../utils/currency";
 import {
   Users,
   Building2,
   CalendarCheck,
-  DollarSign,
+  Banknote,
   AlertTriangle,
   CheckCircle,
   Clock,
@@ -36,8 +37,8 @@ const AdminDashboard = () => {
     },
     {
       name: "Total Revenue",
-      value: "$24,580",
-      icon: DollarSign,
+      value: formatLKR(7865600),
+      icon: Banknote,
       color: "bg-emerald-500",
     },
   ];

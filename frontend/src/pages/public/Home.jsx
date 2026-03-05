@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import {
   Shield,
-  DollarSign,
+  Banknote,
   Star,
   MessageCircle,
   Search,
@@ -32,7 +32,7 @@ const HomePage = () => {
         "Every property is personally verified by our team to ensure safety, quality, and accurate information for students.",
     },
     {
-      icon: DollarSign,
+      icon: Banknote,
       title: "Transparent Pricing",
       description:
         "No hidden fees or surprises. See exact costs upfront including rent, utilities, and deposits before you commit.",
@@ -116,7 +116,7 @@ const HomePage = () => {
             <div className="text-center lg:text-left">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700">
                 <Shield className="h-4 w-4" />
-                Trusted by 5,000+ Students
+                Trusted by 100+ Students
               </div>
 
               <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
@@ -152,7 +152,7 @@ const HomePage = () => {
 
               <div className="mt-10 flex items-center justify-center gap-8 lg:justify-start">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">500+</div>
+                  <div className="text-2xl font-bold text-gray-900">50+</div>
                   <div className="text-sm text-gray-500">Verified Listings</div>
                 </div>
                 <div className="h-10 w-px bg-gray-200"></div>

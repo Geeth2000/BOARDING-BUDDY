@@ -40,15 +40,11 @@ export const validateFile = (file) => {
 /**
  * Upload a single file to Supabase Storage
  * @param {File} file - File to upload
- * @param {string} bucket - Bucket name (default: "property-images")
+ * @param {string} bucket - Bucket name (default: "images2")
  * @param {string} folder - Optional folder path
  * @returns {Promise<string>} - Public URL of uploaded file
  */
-export const uploadFile = async (
-  file,
-  bucket = "property-images",
-  folder = "",
-) => {
+export const uploadFile = async (file, bucket = "images2", folder = "") => {
   // Validate file
   const validation = validateFile(file);
   if (!validation.valid) {
@@ -92,7 +88,7 @@ export const uploadFile = async (
  */
 export const uploadMultipleFiles = async (
   files,
-  bucket = "property-images",
+  bucket = "images2",
   folder = "",
   onProgress,
 ) => {
@@ -125,7 +121,7 @@ export const uploadMultipleFiles = async (
  * @param {string} fileUrl - Public URL of the file
  * @param {string} bucket - Bucket name
  */
-export const deleteFile = async (fileUrl, bucket = "property-images") => {
+export const deleteFile = async (fileUrl, bucket = "images2") => {
   try {
     // Extract file path from URL
     const urlParts = fileUrl.split(`/${bucket}/`);

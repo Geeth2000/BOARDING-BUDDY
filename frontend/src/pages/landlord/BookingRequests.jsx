@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import landlordAPI from "../../api/landlord";
 import { ConfirmModal } from "../../components";
+import { formatLKR } from "../../utils/currency";
 import {
   Calendar,
   CheckCircle,
@@ -253,7 +254,7 @@ const BookingRequests = () => {
                       {booking.propertyId?.title || "Property Deleted"}
                     </h3>
                     <p className="text-sm text-gray-500">
-                      ${booking.rent?.toLocaleString() || 0}/month
+                      {formatLKR(booking.rent || 0)}/month
                     </p>
                   </div>
                 </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import landlordAPI from "../../api/landlord";
 import { ConfirmModal } from "../../components";
+import { formatLKR } from "../../utils/currency";
 import {
   Building2,
   Plus,
@@ -9,7 +10,6 @@ import {
   Pencil,
   Trash2,
   MapPin,
-  DollarSign,
   CheckCircle,
   Clock,
   XCircle,
@@ -201,9 +201,8 @@ const MyProperties = () => {
                 </div>
 
                 {/* Price */}
-                <div className="mb-4 flex items-center gap-1 text-xl font-bold text-blue-600">
-                  <DollarSign className="h-5 w-5" />
-                  {property.rent?.toLocaleString() || 0}
+                <div className="mb-4 text-xl font-bold text-blue-600">
+                  {formatLKR(property.rent || 0)}
                   <span className="text-sm font-normal text-gray-500">
                     /month
                   </span>

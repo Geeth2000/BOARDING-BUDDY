@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { DataTable, ConfirmModal } from "../../components";
 import adminAPI from "../../api/admin";
+import { formatLKR } from "../../utils/currency";
 import {
   Building2,
   Plus,
@@ -93,7 +94,7 @@ const AdminProperties = () => {
       header: "Price",
       render: (property) => (
         <div className="font-semibold text-blue-600">
-          ${property.price?.toLocaleString() || 0}
+          {formatLKR(property.price || 0)}
           <span className="text-xs font-normal text-gray-500">/mo</span>
         </div>
       ),

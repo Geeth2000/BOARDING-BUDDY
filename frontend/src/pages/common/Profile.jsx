@@ -42,9 +42,9 @@ const Profile = () => {
     address: {
       street: "",
       city: "",
-      state: "",
-      zipCode: "",
-      country: "USA",
+      district: "",
+      postalCode: "",
+      country: "Sri Lanka",
     },
   });
 
@@ -58,9 +58,9 @@ const Profile = () => {
         address: {
           street: user.address?.street || "",
           city: user.address?.city || "",
-          state: user.address?.state || "",
-          zipCode: user.address?.zipCode || "",
-          country: user.address?.country || "USA",
+          district: user.address?.district || "",
+          postalCode: user.address?.postalCode || "",
+          country: user.address?.country || "Sri Lanka",
         },
       });
     }
@@ -100,7 +100,7 @@ const Profile = () => {
     setError("");
 
     try {
-      const url = await uploadFile(file, "property-images", "avatars");
+      const url = await uploadFile(file, "images2", "avatars");
       setFormData((prev) => ({ ...prev, avatar: url }));
       setSuccess("Avatar uploaded successfully!");
       setTimeout(() => setSuccess(""), 3000);
@@ -336,33 +336,33 @@ const Profile = () => {
                 name="address.city"
                 value={formData.address.city}
                 onChange={handleChange}
-                placeholder="New York"
+                placeholder="Colombo"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
             <div>
               <label className="mb-1.5 text-sm font-medium text-gray-700">
-                State
+                District
               </label>
               <input
                 type="text"
-                name="address.state"
-                value={formData.address.state}
+                name="address.district"
+                value={formData.address.district}
                 onChange={handleChange}
-                placeholder="NY"
+                placeholder="Colombo"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
             <div>
               <label className="mb-1.5 text-sm font-medium text-gray-700">
-                ZIP Code
+                Postal Code
               </label>
               <input
                 type="text"
-                name="address.zipCode"
-                value={formData.address.zipCode}
+                name="address.postalCode"
+                value={formData.address.postalCode}
                 onChange={handleChange}
-                placeholder="10001"
+                placeholder="10000"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
@@ -375,7 +375,7 @@ const Profile = () => {
                 name="address.country"
                 value={formData.address.country}
                 onChange={handleChange}
-                placeholder="USA"
+                placeholder="Sri Lanka"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
             </div>

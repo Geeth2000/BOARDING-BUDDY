@@ -1,8 +1,9 @@
 import { useAuth } from "../../context";
+import { formatLKR } from "../../utils/currency";
 import {
   Building2,
   CalendarCheck,
-  DollarSign,
+  Banknote,
   TrendingUp,
   Plus,
 } from "lucide-react";
@@ -30,8 +31,8 @@ const LandlordDashboard = () => {
     },
     {
       name: "Monthly Revenue",
-      value: "$4,250",
-      icon: DollarSign,
+      value: formatLKR(1360000),
+      icon: Banknote,
       color: "bg-emerald-500",
       trend: "+12% vs last month",
     },

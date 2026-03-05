@@ -56,9 +56,9 @@ const userSchema = new mongoose.Schema(
     address: {
       street: String,
       city: String,
-      state: String,
-      zipCode: String,
-      country: { type: String, default: "USA" },
+      district: String,
+      postalCode: String,
+      country: { type: String, default: "Sri Lanka" },
     },
     // Settings/preferences
     settings: {
@@ -67,7 +67,7 @@ const userSchema = new mongoose.Schema(
       marketingEmails: { type: Boolean, default: false },
       darkMode: { type: Boolean, default: false },
       language: { type: String, default: "en" },
-      timezone: { type: String, default: "America/New_York" },
+      timezone: { type: String, default: "Asia/Colombo" },
     },
   },
   {

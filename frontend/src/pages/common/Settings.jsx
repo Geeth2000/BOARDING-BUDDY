@@ -41,7 +41,7 @@ const Settings = () => {
     marketingEmails: false,
     darkMode: false,
     language: "en",
-    timezone: "America/New_York",
+    timezone: "Asia/Colombo",
   });
 
   // Password form
@@ -69,7 +69,7 @@ const Settings = () => {
         marketingEmails: user.settings.marketingEmails ?? false,
         darkMode: user.settings.darkMode ?? false,
         language: user.settings.language || "en",
-        timezone: user.settings.timezone || "America/New_York",
+        timezone: user.settings.timezone || "Asia/Colombo",
       });
     }
   }, [user]);
@@ -159,11 +159,12 @@ const Settings = () => {
   ];
 
   const timezones = [
-    { value: "America/New_York", label: "Eastern Time (ET)" },
-    { value: "America/Chicago", label: "Central Time (CT)" },
-    { value: "America/Denver", label: "Mountain Time (MT)" },
-    { value: "America/Los_Angeles", label: "Pacific Time (PT)" },
+    { value: "Asia/Colombo", label: "Sri Lanka Time (IST)" },
+    { value: "Asia/Kolkata", label: "India Standard Time (IST)" },
     { value: "UTC", label: "Coordinated Universal Time (UTC)" },
+    { value: "Asia/Singapore", label: "Singapore Time (SGT)" },
+    { value: "Asia/Dubai", label: "Gulf Standard Time (GST)" },
+    { value: "Europe/London", label: "Greenwich Mean Time (GMT)" },
   ];
 
   return (

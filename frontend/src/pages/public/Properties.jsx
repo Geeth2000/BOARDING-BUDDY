@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getAllProperties } from "../../data/properties";
+import { formatLKR } from "../../utils/currency";
 import {
   MapPin,
   Bed,
@@ -191,11 +192,11 @@ const Properties = () => {
                   {/* Min Price */}
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Min Price
+                      Min Price (Rs.)
                     </label>
                     <input
                       type="number"
-                      placeholder="$0"
+                      placeholder="Rs. 0"
                       value={filters.minPrice}
                       onChange={(e) =>
                         setFilters({ ...filters, minPrice: e.target.value })
@@ -207,7 +208,7 @@ const Properties = () => {
                   {/* Max Price */}
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Max Price
+                      Max Price (Rs.)
                     </label>
                     <input
                       type="number"
@@ -331,7 +332,7 @@ const PropertyCard = ({ property }) => {
         {/* Price */}
         <div className="mb-2 flex items-baseline gap-1">
           <span className="text-2xl font-bold text-blue-600">
-            ${property.price.toLocaleString()}
+            {formatLKR(property.price)}
           </span>
           <span className="text-gray-500">/month</span>
         </div>

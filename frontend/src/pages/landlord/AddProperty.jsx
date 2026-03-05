@@ -10,7 +10,7 @@ import {
 import {
   Building2,
   MapPin,
-  DollarSign,
+  Banknote,
   Bed,
   Bath,
   Image as ImageIcon,
@@ -50,8 +50,8 @@ const AddProperty = () => {
     location: {
       address: "",
       city: "",
-      state: "",
-      zipCode: "",
+      district: "",
+      postalCode: "",
     },
     amenities: [],
     genderPreference: "any",
@@ -208,7 +208,7 @@ const AddProperty = () => {
         const files = imageFiles.map((f) => f.file);
         imageUrls = await uploadMultipleFiles(
           files,
-          "property-images",
+          "images2",
           "properties",
           (current, total) => setUploadProgress({ current, total }),
         );
@@ -312,15 +312,15 @@ const AddProperty = () => {
 
             <div>
               <label className="mb-1.5 flex items-center gap-2 text-sm font-medium text-gray-700">
-                <DollarSign className="h-4 w-4" />
-                Monthly Rent *
+                <Banknote className="h-4 w-4" />
+                Monthly Rent (Rs.) *
               </label>
               <input
                 type="number"
                 name="rent"
                 value={formData.rent}
                 onChange={handleChange}
-                placeholder="500"
+                placeholder="50000"
                 min="0"
                 required
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
@@ -420,34 +420,34 @@ const AddProperty = () => {
                 name="location.city"
                 value={formData.location.city}
                 onChange={handleChange}
-                placeholder="New York"
+                placeholder="Colombo"
                 required
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                State
+                District
               </label>
               <input
                 type="text"
-                name="location.state"
-                value={formData.location.state}
+                name="location.district"
+                value={formData.location.district}
                 onChange={handleChange}
-                placeholder="NY"
+                placeholder="Colombo"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                ZIP Code
+                Postal Code
               </label>
               <input
                 type="text"
-                name="location.zipCode"
-                value={formData.location.zipCode}
+                name="location.postalCode"
+                value={formData.location.postalCode}
                 onChange={handleChange}
-                placeholder="10001"
+                placeholder="10000"
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-900 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
             </div>

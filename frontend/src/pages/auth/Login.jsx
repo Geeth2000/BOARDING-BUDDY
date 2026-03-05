@@ -94,7 +94,7 @@ const Login = () => {
                 <Shield className="h-5 w-5 text-white" />
               </div>
               <div>
-                <div className="text-xl font-bold text-white">500+</div>
+                <div className="text-xl font-bold text-white">50+</div>
                 <div className="text-sm text-blue-200">Verified Listings</div>
               </div>
             </div>
@@ -103,7 +103,7 @@ const Login = () => {
                 <Users className="h-5 w-5 text-white" />
               </div>
               <div>
-                <div className="text-xl font-bold text-white">5,000+</div>
+                <div className="text-xl font-bold text-white">100+</div>
                 <div className="text-sm text-blue-200">Happy Students</div>
               </div>
             </div>
