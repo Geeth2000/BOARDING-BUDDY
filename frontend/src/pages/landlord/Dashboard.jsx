@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context";
 import { formatLKR } from "../../utils/currency";
 import {
@@ -13,6 +14,11 @@ import {
  */
 const LandlordDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleNavigation = () => {
+    navigate("/landlord/add-property");
+  };
 
   const stats = [
     {
@@ -57,7 +63,10 @@ const LandlordDashboard = () => {
             Here's an overview of your properties and bookings.
           </p>
         </div>
-        <button className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-blue-700">
+        <button
+          onClick={handleNavigation}
+          className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-blue-700"
+        >
           <Plus className="h-5 w-5" />
           <span>Add Property</span>
         </button>

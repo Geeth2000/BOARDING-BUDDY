@@ -66,9 +66,9 @@ const PublicNavbar = () => {
   return (
     <header
       className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "border-b border-gray-100 bg-white/90 shadow-md backdrop-blur-md"
-          : "bg-transparent"
+        scrolled || mobileMenuOpen
+          ? "border-b border-gray-100 bg-white shadow-md"
+          : "bg-white/80 backdrop-blur-sm md:bg-transparent"
       }`}
     >
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -160,7 +160,7 @@ const PublicNavbar = () => {
         {/* Mobile Menu */}
         <div
           className={`overflow-hidden transition-all duration-300 md:hidden ${
-            mobileMenuOpen ? "max-h-80 pb-4" : "max-h-0"
+            mobileMenuOpen ? "max-h-[500px] pb-4" : "max-h-0"
           }`}
         >
           <div className="space-y-1 pt-2">
